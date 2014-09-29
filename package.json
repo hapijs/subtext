@@ -1,0 +1,36 @@
+{
+  "name": "subtext",
+  "description": "HTTP payload parsing",
+  "version": "0.0.0",
+  "repository": "git://github.com/hapijs/payload",
+  "main": "index",
+  "keywords": [
+    "http",
+    "payload",
+    "file",
+    "stream",
+    "multipart"
+  ],
+  "engines": {
+    "node": ">=0.10.32"
+  },
+  "dependencies": {
+    "boom": "2.x.x",
+    "hoek": "2.x.x",
+    "qs": "2.x.x",
+    "pez": "1.x.x",
+    "wreck": "5.x.x"
+  },
+  "devDependencies": {
+    "lab": "4.x.x"
+  },
+  "scripts": {
+    "test": "make test-cov"
+  },
+  "licenses": [
+    {
+      "type": "BSD",
+      "url": "http://github.com/hapijs/subtext/raw/master/LICENSE"
+    }
+  ]
+}
