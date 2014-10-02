@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "boom": "2.x.x",
+    "content": "1.x.x.",
     "hoek": "2.x.x",
     "qs": "2.x.x",
     "pez": "1.x.x",
