@@ -1,7 +1,7 @@
 {
   "name": "subtext",
   "description": "HTTP payload parsing",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "repository": "git://github.com/hapijs/payload",
   "main": "index",
   "keywords": [
@@ -22,6 +22,7 @@
     "wreck": "5.x.x"
   },
   "devDependencies": {
+    "form-data": "0.1.x",
     "lab": "4.x.x"
   },
   "scripts": {
