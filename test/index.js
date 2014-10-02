@@ -291,162 +291,158 @@ describe('parse()', function () {
         });
     });
 
-    describe('parse mode', function () {
+    it('parses an allowed content-type', function (done) {
 
-        it('returns 200 on text mime type when allowed', function (done) {
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'text/plain'
+        };
 
-            var textHandler = function (request, reply) {
+        Subtext.parse(request, null, { parse: true, output: 'data', allow: 'text/plain' }, function (err, parsed) {
 
-                reply(request.payload + '+456');
+            expect(err).to.not.exist;
+            expect(parsed.mime).to.equal('text/plain');
+            expect(parsed.payload).to.deep.equal(payload);
+            done();
+        });
+    });
+
+    it('parses an allowed content-type (array)', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'text/plain'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', allow: ['text/plain'] }, function (err, parsed) {
+
+            expect(err).to.not.exist;
+            expect(parsed.mime).to.equal('text/plain');
+            expect(parsed.payload).to.deep.equal(payload);
+            done();
+        });
+    });
+
+    it('errors on an unallowed content-type', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'text/plain'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', allow: 'application/json' }, function (err, parsed) {
+
+            expect(err).to.exist;
+            expect(err.message).to.equal('Unsupported Media Type');
+            done();
+        });
+    });
+
+    it('errors on an unallowed content-type (array)', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'text/plain'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', allow: ['application/json'] }, function (err, parsed) {
+
+            expect(err).to.exist;
+            expect(err.message).to.equal('Unsupported Media Type');
+            done();
+        });
+    });
+
+    it('parses form encoded payload', function (done) {
+
+        var payload = 'x=abc';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist;
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(parsed.payload.x).to.equal('abc');
+            done();
+        });
+    });
+
+    it('parses form encoded payload (array keys)', function (done) {
+
+        var payload = 'x[y]=1&x[z]=2';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist;
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(parsed.payload).to.deep.equal({ x: { y: '1', z: '2' } });
+            done();
+        });
+    });
+
+    it('errors on maformed zipped payload', function (done) {
+
+        var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-encoding': 'gzip'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.exist;
+            expect(err.message).to.equal('Invalid compressed payload');
+            done();
+        });
+    });
+
+    it('errors on maformed zipped payload (parse gunzip only)', function (done) {
+
+        var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-encoding': 'gzip'
+        };
+
+        Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
+
+            expect(err).to.exist;
+            expect(err.message).to.equal('Invalid compressed payload');
+            done();
+        });
+    });
+
+    it('parses a gzipped payload', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        Zlib.gzip(payload, function (err, compressed) {
+
+            var request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'gzip'
             };
 
-            var server = new Hapi.Server();
-            server.route({ method: 'POST', path: '/textOnly', config: { handler: textHandler, payload: { allow: 'text/plain' } } });
+            Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            server.inject({ method: 'POST', url: '/textOnly', payload: 'testing123', headers: { 'content-type': 'text/plain' } }, function (res) {
-
-                expect(res.statusCode).to.equal(200);
-                expect(res.result).to.equal('testing123+456');
-                done();
-            });
-        });
-
-        it('returns 415 on non text mime type when disallowed', function (done) {
-
-            var textHandler = function (request, reply) {
-
-                reply(request.payload + '+456');
-            };
-
-            var server = new Hapi.Server();
-            server.route({ method: 'POST', path: '/textOnly', config: { handler: textHandler, payload: { allow: 'text/plain' } } });
-
-            server.inject({ method: 'POST', url: '/textOnly', payload: 'testing123', headers: { 'content-type': 'application/octet-stream' } }, function (res) {
-
-                expect(res.statusCode).to.equal(415);
-                done();
-            });
-        });
-
-        it('returns 200 on text mime type when allowed (array)', function (done) {
-
-            var textHandler = function (request, reply) {
-
-                reply(request.payload + '+456');
-            };
-
-            var server = new Hapi.Server();
-            server.route({ method: 'POST', path: '/textOnlyArray', config: { handler: textHandler, payload: { allow: ['text/plain'] } } });
-
-            server.inject({ method: 'POST', url: '/textOnlyArray', payload: 'testing123', headers: { 'content-type': 'text/plain' } }, function (res) {
-
-                expect(res.statusCode).to.equal(200);
-                expect(res.result).to.equal('testing123+456');
-                done();
-            });
-        });
-
-        it('returns 415 on non text mime type when disallowed (array)', function (done) {
-
-            var textHandler = function (request, reply) {
-
-                reply(request.payload + '+456');
-            };
-
-            var server = new Hapi.Server();
-            server.route({ method: 'POST', path: '/textOnlyArray', config: { handler: textHandler, payload: { allow: ['text/plain'] } } });
-
-            server.inject({ method: 'POST', url: '/textOnlyArray', payload: 'testing123', headers: { 'content-type': 'application/octet-stream' } }, function (res) {
-
-                expect(res.statusCode).to.equal(415);
-                done();
-            });
-        });
-
-        it('parses application/x-www-form-urlencoded', function (done) {
-
-            var server = new Hapi.Server();
-
-            server.route({
-                method: 'POST',
-                path: '/',
-                handler: function (request, reply) {
-
-                    reply('got ' + request.payload.x);
-                }
-            });
-
-            server.inject({ method: 'POST', url: '/', payload: 'x=abc', headers: { 'content-type': 'application/x-www-form-urlencoded' } }, function (res) {
-
-                expect(res.statusCode).to.equal(200);
-                expect(res.result).to.equal('got abc');
-                done();
-            });
-        });
-
-        it('parses application/x-www-form-urlencoded with arrays', function (done) {
-
-            var server = new Hapi.Server();
-
-            server.route({
-                method: 'POST',
-                path: '/',
-                handler: function (request, reply) {
-
-                    reply(request.payload.x.y + request.payload.x.z);
-                }
-            });
-
-            server.inject({ method: 'POST', url: '/', payload: 'x[y]=1&x[z]=2', headers: { 'content-type': 'application/x-www-form-urlencoded' } }, function (res) {
-
-                expect(res.statusCode).to.equal(200);
-                expect(res.result).to.equal('12');
+                expect(err).to.not.exist;
+                expect(parsed.payload.toString()).to.equal(payload);
                 done();
             });
         });
     });
 
     describe('unzip', function () {
-
-        it('errors on malformed payload', function (done) {
-
-            var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
-
-            var handler = function () {
-
-                throw new Error('never called');
-            };
-
-            var server = new Hapi.Server();
-            server.route({ method: 'POST', path: '/', config: { handler: handler } });
-
-            server.inject({ method: 'POST', url: '/', payload: payload, headers: { 'content-encoding': 'gzip' } }, function (res) {
-
-                expect(res.result).to.exist;
-                expect(res.result.statusCode).to.equal(400);
-                done();
-            });
-        });
-
-        it('errors on malformed payload (gunzip only)', function (done) {
-
-            var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
-
-            var handler = function () {
-
-                throw new Error('never called');
-            };
-
-            var server = new Hapi.Server();
-            server.route({ method: 'POST', path: '/', config: { handler: handler, payload: { parse: 'gunzip' } } });
-
-            server.inject({ method: 'POST', url: '/', payload: payload, headers: { 'content-encoding': 'gzip' } }, function (res) {
-
-                expect(res.result).to.exist;
-                expect(res.result.statusCode).to.equal(400);
-                done();
-            });
-        });
 
         it('does not return an error when the payload has the correct gzip header and gzipped payload', function (done) {
 
