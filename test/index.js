@@ -5,6 +5,7 @@ var Http = require('http');
 var Path = require('path');
 var Stream = require('stream');
 var Zlib = require('zlib');
+var Code = require('code');
 var FormData = require('form-data');
 var Hoek = require('hoek');
 var Lab = require('lab');
@@ -22,7 +23,7 @@ var internals = {};
 var lab = exports.lab = Lab.script();
 var describe = lab.describe;
 var it = lab.it;
-var expect = Lab.expect;
+var expect = Code.expect;
 
 
 describe('parse()', function () {
@@ -35,7 +36,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: false, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
             expect(Buffer.isBuffer(parsed.payload)).to.be.true;
             expect(parsed.payload.toString()).to.equal(payload);
@@ -51,7 +52,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
             expect(parsed.payload).to.deep.equal(JSON.parse(payload));
             done();
@@ -66,7 +67,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'stream' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
             Wreck.read(parsed.payload, null, function (err, result) {
 
@@ -84,7 +85,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: false, output: 'stream' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
             Wreck.read(parsed.payload, null, function (err, result) {
 
@@ -104,7 +105,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json-patch+json');
             expect(parsed.payload).to.deep.equal(JSON.parse(payload));
             done();
@@ -119,7 +120,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
             expect(parsed.payload).to.deep.equal({});
             done();
@@ -136,7 +137,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid content-type header');
             done();
         });
@@ -152,7 +153,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Unsupported Media Type');
             done();
         });
@@ -168,7 +169,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Payload content length greater than maximum allowed: 10');
             done();
         });
@@ -183,7 +184,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Payload content length greater than maximum allowed: 10');
             done();
         });
@@ -197,7 +198,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid request payload JSON format');
             done();
         });
@@ -220,7 +221,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, tap, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload).to.deep.equal(JSON.parse(payload));
             expect(raw).to.equal(payload);
             done();
@@ -244,7 +245,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, tap, { parse: false, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.toString()).to.deep.equal(payload);
             expect(raw).to.equal(payload);
             done();
@@ -258,7 +259,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: false, output: 'file' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             var receivedContents = Fs.readFileSync(parsed.payload.path);
             Fs.unlinkSync(parsed.payload.path);
@@ -282,7 +283,7 @@ describe('parse()', function () {
 
             Subtext.parse(request, null, { parse: true, output: 'file' }, function (err, parsed) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var receivedContents = Fs.readFileSync(parsed.payload.path);
                 Fs.unlinkSync(parsed.payload.path);
@@ -307,7 +308,7 @@ describe('parse()', function () {
 
             Subtext.parse(request, null, { parse: false, output: 'file' }, function (err, parsed) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var receivedContents = Fs.readFileSync(parsed.payload.path);
                 Fs.unlinkSync(parsed.payload.path);
@@ -324,7 +325,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: false, output: 'file', uploads: '/a/b/c/no/such/folder' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.contain('ENOENT');
             done();
         });
@@ -337,7 +338,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/a/b/c/no/such/folder' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.contain('ENOENT');
             done();
         });
@@ -353,7 +354,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/octet-stream');
             expect(Buffer.isBuffer(parsed.payload)).to.be.true;
             expect(parsed.payload.toString()).to.equal(payload);
@@ -371,7 +372,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data', override: 'application/json' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
             expect(parsed.payload).to.deep.equal(JSON.parse(payload));
             done();
@@ -388,7 +389,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('text/plain');
             expect(parsed.payload).to.deep.equal(payload);
             done();
@@ -405,7 +406,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data', allow: 'text/plain' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('text/plain');
             expect(parsed.payload).to.deep.equal(payload);
             done();
@@ -422,7 +423,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data', allow: ['text/plain'] }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('text/plain');
             expect(parsed.payload).to.deep.equal(payload);
             done();
@@ -439,7 +440,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data', allow: 'application/json' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Unsupported Media Type');
             done();
         });
@@ -455,7 +456,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data', allow: ['application/json'] }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Unsupported Media Type');
             done();
         });
@@ -471,7 +472,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
             expect(parsed.payload.x).to.equal('abc');
             done();
@@ -488,7 +489,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
             expect(parsed.payload).to.deep.equal({ x: { y: '1', z: '2' } });
             done();
@@ -505,7 +506,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid compressed payload');
             done();
         });
@@ -521,7 +522,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid compressed payload');
             done();
         });
@@ -539,7 +540,7 @@ describe('parse()', function () {
 
             Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(parsed.payload).to.deep.equal(JSON.parse(payload));
                 done();
             });
@@ -558,7 +559,7 @@ describe('parse()', function () {
 
             Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(parsed.payload.toString()).to.equal(payload);
                 done();
             });
@@ -577,7 +578,7 @@ describe('parse()', function () {
 
             Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(parsed.payload).to.deep.equal(JSON.parse(payload));
                 done();
             });
@@ -596,7 +597,7 @@ describe('parse()', function () {
 
             Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(parsed.payload.toString()).to.equal(payload);
                 done();
             });
@@ -640,7 +641,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload).to.deep.equal({
                 x: ['First', 'Second', 'Third'],
                 field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
@@ -668,7 +669,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.pics).to.deep.equal({});
             done();
         });
@@ -711,7 +712,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid content-type header: multipart missing boundary');
             done();
         });
@@ -732,7 +733,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid multipart payload format');
             done();
         });
@@ -754,7 +755,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.pics.toString()).to.equal('... contents of file1.txt ...\r');
             done();
         });
@@ -776,7 +777,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' }, function (err, parsed) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.contain('/no/such/folder/a/b/c');
             done();
         });
@@ -809,7 +810,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'stream' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.files[0].hapi).to.deep.equal({ filename: 'file1.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file1.txt"', 'content-type': 'text/plain' } });
             expect(parsed.payload.files[1].hapi).to.deep.equal({ filename: 'file2.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file2.txt"', 'content-type': 'text/plain' } });
             expect(parsed.payload.files[2].hapi).to.deep.equal({ filename: 'file3.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file3.txt"', 'content-type': 'text/plain' } });
@@ -841,7 +842,7 @@ describe('parse()', function () {
 
         Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             expect(parsed.payload.my_file.bytes).to.equal(stats.size);
 
@@ -865,7 +866,7 @@ describe('parse()', function () {
 
         Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.file1.bytes).to.equal(stats.size);
             expect(parsed.payload.file2.bytes).to.equal(stats.size);
             done();
@@ -900,7 +901,7 @@ describe('parse()', function () {
 
         Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.file1.bytes).to.equal(stats.size);
             expect(parsed.payload.file2.bytes).to.equal(stats.size);
             done();
@@ -917,7 +918,7 @@ describe('parse()', function () {
 
         Subtext.parse(form, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             var fileContents = Fs.readFileSync(path);
             expect(parsed.payload.my_file.name).to.equal('subtext');
             done();
@@ -970,7 +971,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, tap, { parse: true, output: 'stream' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.x).to.deep.equal(['First', 'Second', 'Third']);
             expect(parsed.payload.field1).to.deep.equal(['Joe Blow\r\nalmost tricked you!', 'Repeated name segment']);
             expect(parsed.payload.pics.hapi.filename).to.equal('file1.txt');
@@ -992,7 +993,7 @@ describe('parse()', function () {
 
         Subtext.parse(form, null, { parse: true, output: 'stream' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             expect(parsed.payload['my_file'].hapi).to.deep.equal({
                 filename: 'image.jpg',
@@ -1004,7 +1005,7 @@ describe('parse()', function () {
 
             Wreck.read(parsed.payload['my_file'], null, function (err, buffer) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(fileContents.length).to.equal(buffer.length);
                 expect(fileContents.toString('binary') === buffer.toString('binary')).to.equal(true);
                 done();
@@ -1031,7 +1032,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.a.b + parsed.payload.a.c).to.equal('34');
             done();
         });
@@ -1061,7 +1062,7 @@ describe('parse()', function () {
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(parsed.payload.a.b + parsed.payload.file + parsed.payload.a.c).to.equal('3and4');
             done();
         });
