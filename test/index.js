@@ -847,8 +847,8 @@ describe('parse()', function () {
             expect(parsed.payload.my_file.bytes).to.equal(stats.size);
 
             var sourceContents = Fs.readFileSync(path);
-            var receivedContents = Fs.readFileSync(parsed.payload['my_file'].path);
-            Fs.unlinkSync(parsed.payload['my_file'].path);
+            var receivedContents = Fs.readFileSync(parsed.payload.my_file.path);
+            Fs.unlinkSync(parsed.payload.my_file.path);
             expect(sourceContents).to.deep.equal(receivedContents);
             done();
         });
@@ -869,6 +869,8 @@ describe('parse()', function () {
             expect(err).to.not.exist();
             expect(parsed.payload.file1.bytes).to.equal(stats.size);
             expect(parsed.payload.file2.bytes).to.equal(stats.size);
+            Fs.unlinkSync(parsed.payload.file1.path);
+            Fs.unlinkSync(parsed.payload.file2.path);
             done();
         });
     });
@@ -895,15 +897,18 @@ describe('parse()', function () {
         };
 
         var form = new FormData();
-        form.append('file1', Fs.createReadStream(path));
-        form.append('file2', Fs.createReadStream(path));
+        form.append('a', Fs.createReadStream(path));
+        form.append('b', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
         Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.file1.bytes).to.equal(stats.size);
-            expect(parsed.payload.file2.bytes).to.equal(stats.size);
+            expect(parsed.payload.a.bytes).to.equal(stats.size);
+            expect(parsed.payload.b.bytes).to.equal(stats.size);
+
+            // The first file is never written due to createWriteStream() above
+            Fs.unlinkSync(parsed.payload.b.path);
             done();
         });
     });
@@ -995,7 +1000,7 @@ describe('parse()', function () {
 
             expect(err).to.not.exist();
 
-            expect(parsed.payload['my_file'].hapi).to.deep.equal({
+            expect(parsed.payload.my_file.hapi).to.deep.equal({
                 filename: 'image.jpg',
                 headers: {
                     'content-disposition': 'form-data; name="my_file"; filename="image.jpg"',
@@ -1003,7 +1008,7 @@ describe('parse()', function () {
                 }
             });
 
-            Wreck.read(parsed.payload['my_file'], null, function (err, buffer) {
+            Wreck.read(parsed.payload.my_file, null, function (err, buffer) {
 
                 expect(err).to.not.exist();
                 expect(fileContents.length).to.equal(buffer.length);
@@ -1065,6 +1070,45 @@ describe('parse()', function () {
             expect(err).to.not.exist();
             expect(parsed.payload.a.b + parsed.payload.file + parsed.payload.a.c).to.equal('3and4');
             done();
+        });
+    });
+
+    it('cleans file when stream is aborted', function (done) {
+
+        var path = Path.join(__dirname, 'file');
+        var count = Fs.readdirSync(path).length;
+
+        var server = Http.createServer();
+        server.on('request', function (req, res) {
+
+            Subtext.parse(req, null, { parse: false, output: 'file', uploads: path }, function (err, parsed) {
+
+                expect(Fs.readdirSync(path).length).to.equal(count);
+                done();
+            });
+        });
+
+        server.listen(0, function () {
+
+            var options = {
+                hostname: 'localhost',
+                port: server.address().port,
+                path: '/',
+                method: 'POST',
+                headers: { 'content-length': 1000000 }
+            };
+
+            var req = Http.request(options, function (res) { });
+
+            req.on('error', function (err) { });
+
+            var random = new Buffer(100000);
+            req.write(random);
+            req.write(random);
+            setTimeout(function () {
+
+                req.abort();
+            }, 10);
         });
     });
 });
