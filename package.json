@@ -2,7 +2,7 @@
   "name": "subtext",
   "description": "HTTP payload parsing",
   "version": "1.0.2",
-  "repository": "git://github.com/hapijs/payload",
+  "repository": "git://github.com/hapijs/subtext",
   "main": "index",
   "keywords": [
     "http",
