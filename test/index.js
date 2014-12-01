@@ -112,6 +112,26 @@ describe('parse()', function () {
         });
     });
 
+    it('returns a parsed body (xml-derived media type)', function (done) {
+
+      var payload = '<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Example Feed</title><link href="http://example.org/feed/" rel="self"/></feed>';
+      var request = Wreck.toReadableStream(payload);
+      request.headers = {
+        'content-type': 'application/atom+xml'
+      };
+
+      Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+        expect(err).to.not.exist();
+        expect(parsed.mime).to.equal('application/atom+xml');
+        expect(parsed.payload.feed).to.exist();
+        expect(parsed.payload.feed.title).to.equal('Example Feed');
+        expect(parsed.payload.feed.link.$.href).to.equal('http://example.org/feed/');
+        expect(parsed.payload.feed.link.$.rel).to.equal('self');
+        done();
+      });
+    });
+
     it('returns an empty parsed body', function (done) {
 
         var payload = '';
