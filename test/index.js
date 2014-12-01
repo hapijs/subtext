@@ -224,6 +224,22 @@ describe('parse()', function () {
         });
     });
 
+    it('errors on invalid XML payload', function (done) {
+
+      var payload = '<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Example Feed</title>';
+      var request = Wreck.toReadableStream(payload);
+      request.headers = {
+        'content-type': 'application/atom+xml'
+      };
+
+      Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+        expect(err).to.exist();
+        expect(err.message).to.equal('Invalid request payload XML format');
+        done();
+      });
+    });
+
     it('peeks at the unparsed stream of a parsed body', function (done) {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
