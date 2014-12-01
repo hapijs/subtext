@@ -18,9 +18,10 @@
     "boom": "2.x.x",
     "content": "1.x.x",
     "hoek": "2.x.x",
-    "qs": "2.x.x",
     "pez": "1.x.x",
-    "wreck": "5.x.x"
+    "qs": "2.x.x",
+    "wreck": "5.x.x",
+    "xml2js": "0.4.x"
   },
   "devDependencies": {
     "code": "1.x.x",
