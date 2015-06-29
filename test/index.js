@@ -1,5 +1,6 @@
 // Load modules
 
+var Domain = require('domain');
 var Fs = require('fs');
 var Http = require('http');
 var Path = require('path');
@@ -1239,6 +1240,29 @@ describe('parse()', function () {
 
                 req.abort();
             }, 10);
+        });
+    });
+
+    it('avoids catching an error thrown in sync callback', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {};
+
+        var domain = Domain.create();
+        domain.once('error', function (err) {
+
+            expect(err.message).to.equal('callback error');
+            done();
+        });
+
+        domain.run(function () {
+
+            Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+                expect(err).to.not.exist();
+                throw new Error('callback error');
+            });
         });
     });
 });
