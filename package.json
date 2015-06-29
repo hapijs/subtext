@@ -1,9 +1,9 @@
 {
   "name": "subtext",
   "description": "HTTP payload parsing",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "repository": "git://github.com/hapijs/subtext",
-  "main": "index",
+  "main": "lib/index.js",
   "keywords": [
     "http",
     "payload",
@@ -28,12 +28,8 @@
     "lab": "5.x.x"
   },
   "scripts": {
-    "test": "make test-cov"
+    "test": "lab -a code -t 100 -L",
+    "test-cov-html": "lab -a code -r html -o coverage.html"
   },
-  "licenses": [
-    {
-      "type": "BSD",
-      "url": "http://github.com/hapijs/subtext/raw/master/LICENSE"
-    }
-  ]
+  "license": "BSD-3-Clause"
 }

@@ -38,7 +38,7 @@ describe('parse()', function () {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
-            expect(Buffer.isBuffer(parsed.payload)).to.be.true;
+            expect(Buffer.isBuffer(parsed.payload)).to.be.true();
             expect(parsed.payload.toString()).to.equal(payload);
             done();
         });
@@ -356,7 +356,7 @@ describe('parse()', function () {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/octet-stream');
-            expect(Buffer.isBuffer(parsed.payload)).to.be.true;
+            expect(Buffer.isBuffer(parsed.payload)).to.be.true();
             expect(parsed.payload.toString()).to.equal(payload);
             done();
         });
@@ -504,11 +504,11 @@ describe('parse()', function () {
             'content-type': 'application/x-www-form-urlencoded'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', qsOptions: { arrayLimit: 0 } }, function (err, parsed) {
+        Subtext.parse(request, null, { parse: true, output: 'data', qs: { arrayLimit: 0 } }, function (err, parsed) {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload).to.deep.equal({ x: { '0' : '1', '100' : '2' } });
+            expect(parsed.payload).to.deep.equal({ x: { 0: '1', 100: '2' } });
             done();
         });
     });
@@ -521,7 +521,7 @@ describe('parse()', function () {
             'content-type': 'application/x-www-form-urlencoded'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', qsOptions: { arrayLimit: 30 } }, function (err, parsed) {
+        Subtext.parse(request, null, { parse: true, output: 'data', qs: { arrayLimit: 30 } }, function (err, parsed) {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
@@ -721,7 +721,7 @@ describe('parse()', function () {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', qsOptions: { arrayLimit: 0 } }, function (err, parsed) {
+        Subtext.parse(request, null, { parse: true, output: 'data', qs: { arrayLimit: 0 } }, function (err, parsed) {
 
             expect(err).to.not.exist();
             expect(parsed.payload).to.deep.equal({
