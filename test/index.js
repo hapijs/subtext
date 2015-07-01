@@ -112,6 +112,37 @@ describe('parse()', function () {
         });
     });
 
+    it('returns a parsed body (custom media type support)', function (done) {
+
+        var payload = 'a->1|b->2';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-arrow-notation'
+        };
+
+        var arrowNotationHandler = function (payload, next) {
+
+            var result = {};
+            var values = payload.toString('utf8').split("|");
+            for (var i = 0, il = values.length; i < il; ++i) {
+                var pair = values[i].split("->");
+                result[pair[0]] = pair[1];
+            }
+            return next(null, result);
+        };
+
+        Subtext.registerMimeTypeHandler('application/x-arrow-notation', arrowNotationHandler);
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-arrow-notation');
+            expect(parsed.payload).to.deep.equal({a: '1', b: '2'});
+            done();
+        });
+
+    });
+
     it('returns an empty parsed body', function (done) {
 
         var payload = '';
@@ -201,6 +232,28 @@ describe('parse()', function () {
             expect(err).to.exist();
             expect(err.message).to.equal('Invalid request payload JSON format');
             done();
+        });
+    });
+
+    it('errors when custom mime type handler throws exception', function (done) {
+
+        var payload = 'a<-1|b<-2';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-arrow-notation'
+        };
+
+        var arrowNotationHandler = function (payload, next) {
+            throw 'Unsupported payload';
+        };
+
+        Subtext.registerMimeTypeHandler('application/x-arrow-notation', arrowNotationHandler);
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+          expect(err).to.exist();
+          expect(err.message).to.equal('Invalid request payload format');
+          done();
         });
     });
 
