@@ -496,6 +496,40 @@ describe('parse()', function () {
         });
     });
 
+    it('parses form encoded payload (with qs arraylimit set to 0)', function (done) {
+
+        var payload = 'x[0]=1&x[100]=2';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', qsOptions: { arrayLimit: 0 } }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(parsed.payload).to.deep.equal({ x: { '0' : '1', '100' : '2' } });
+            done();
+        });
+    });
+
+    it('parses form encoded payload (with qs arraylimit set to 30) as flat zero indexed array', function (done) {
+
+        var payload = 'x[0]=0&x[1]=1&x[2]=2&x[3]=3&x[4]=4&x[5]=5&x[6]=6&x[7]=7&x[8]=8&x[9]=9&x[10]=10&x[11]=11&x[12]=12&x[13]=13&x[14]=14&x[15]=15&x[16]=16&x[17]=17&x[18]=18&x[19]=19&x[20]=20&x[21]=21&x[22]=22&x[23]=23&x[24]=24&x[25]=25&x[26]=26&x[27]=27&x[28]=28&x[29]=29&';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', qsOptions: { arrayLimit: 30 } }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(parsed.payload).to.deep.equal({ x: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29'] });
+            done();
+        });
+    });
+
     it('errors on malformed zipped payload', function (done) {
 
         var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
@@ -601,6 +635,102 @@ describe('parse()', function () {
                 expect(parsed.payload.toString()).to.equal(payload);
                 done();
             });
+        });
+    });
+
+    it('parses a multipart payload', function (done) {
+
+        var payload =
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'First\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'Second\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'Third\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Joe Blow\r\nalmost tricked you!\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Repeated name segment\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+                'Content-Type: text/plain\r\n' +
+                '\r\n' +
+                '... contents of file1.txt ...\r\r\n' +
+                '--AaB03x--\r\n';
+
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload).to.deep.equal({
+                x: ['First', 'Second', 'Third'],
+                field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
+                pics: '... contents of file1.txt ...\r'
+            });
+
+            done();
+        });
+    });
+
+    it('parses a multipart payload with qs arraylimit set to zero', function (done) {
+
+        var payload =
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x[0]"\r\n' +
+                '\r\n' +
+                'First\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x[1]"\r\n' +
+                '\r\n' +
+                'Second\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x[30]"\r\n' +
+                '\r\n' +
+                'Third\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Joe Blow\r\nalmost tricked you!\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Repeated name segment\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+                'Content-Type: text/plain\r\n' +
+                '\r\n' +
+                '... contents of file1.txt ...\r\r\n' +
+                '--AaB03x--\r\n';
+
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', qsOptions: { arrayLimit: 0 } }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload).to.deep.equal({
+                x: { '0': 'First', '1': 'Second', '30': 'Third' },
+                field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
+                pics: '... contents of file1.txt ...\r'
+            });
+
+            done();
         });
     });
 
