@@ -33,7 +33,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: false, output: 'data' }, function (err, parsed) {
 
@@ -49,7 +51,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
@@ -64,7 +68,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: true, output: 'stream' }, function (err, parsed) {
 
@@ -82,7 +88,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: false, output: 'stream' }, function (err, parsed) {
 
@@ -117,13 +125,31 @@ describe('parse()', function () {
 
         var payload = '';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.deep.equal({});
+            expect(parsed.payload).to.equal(null);
+            done();
+        });
+    });
+
+    it('returns an empty string', function (done) {
+
+        var payload = '';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'text/plain'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload).to.equal('');
             done();
         });
     });
@@ -156,6 +182,7 @@ describe('parse()', function () {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Unsupported Media Type');
+            expect(parsed.payload).to.be.null();
             done();
         });
     });
@@ -165,7 +192,8 @@ describe('parse()', function () {
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
         request.headers = {
-            'content-length': '50'
+            'content-length': '50',
+            'content-type': 'application/json'
         };
 
         Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 }, function (err, parsed) {
@@ -180,7 +208,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
         request.destroy = function () { };
 
         Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 }, function (err, parsed) {
@@ -195,7 +225,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
 
@@ -209,7 +241,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         var raw = '';
         var tap = new Stream.Transform();
@@ -233,7 +267,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         var raw = '';
         var tap = new Stream.Transform();
@@ -256,7 +292,9 @@ describe('parse()', function () {
     it('saves file', function (done) {
 
         var request = Wreck.toReadableStream('payload');
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: false, output: 'file' }, function (err, parsed) {
 
@@ -304,7 +342,8 @@ describe('parse()', function () {
 
             var request = Wreck.toReadableStream(compressed);
             request.headers = {
-                'content-encoding': 'gzip'
+                'content-encoding': 'gzip',
+                'content-type': 'application/json'
             };
 
             Subtext.parse(request, null, { parse: false, output: 'file' }, function (err, parsed) {
@@ -322,7 +361,9 @@ describe('parse()', function () {
     it('errors on invalid upload directory (parse false)', function (done) {
 
         var request = Wreck.toReadableStream('payload');
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: false, output: 'file', uploads: '/a/b/c/no/such/folder' }, function (err, parsed) {
 
@@ -335,7 +376,9 @@ describe('parse()', function () {
     it('errors on invalid upload directory (parse true)', function (done) {
 
         var request = Wreck.toReadableStream('payload');
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/a/b/c/no/such/folder' }, function (err, parsed) {
 
@@ -359,6 +402,37 @@ describe('parse()', function () {
             expect(parsed.mime).to.equal('application/octet-stream');
             expect(Buffer.isBuffer(parsed.payload)).to.be.true();
             expect(parsed.payload.toString()).to.equal(payload);
+            done();
+        });
+    });
+
+    it('defaults to application/octet-stream', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {};
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/octet-stream');
+            expect(Buffer.isBuffer(parsed.payload)).to.be.true();
+            expect(parsed.payload.toString()).to.equal(payload);
+            done();
+        });
+    });
+
+    it('returns null on empty payload and application/octet-stream', function (done) {
+
+        var payload = '';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {};
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/octet-stream');
+            expect(parsed.payload).to.be.null();
             done();
         });
     });
@@ -480,6 +554,23 @@ describe('parse()', function () {
         });
     });
 
+    it('parses empty form encoded payload', function (done) {
+
+        var payload = '';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(parsed.payload).to.deep.equal({});
+            done();
+        });
+    });
+
     it('parses form encoded payload (array keys)', function (done) {
 
         var payload = 'x[y]=1&x[z]=2';
@@ -536,7 +627,8 @@ describe('parse()', function () {
         var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
         var request = Wreck.toReadableStream(payload);
         request.headers = {
-            'content-encoding': 'gzip'
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
         };
 
         Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
@@ -552,7 +644,8 @@ describe('parse()', function () {
         var payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
         var request = Wreck.toReadableStream(payload);
         request.headers = {
-            'content-encoding': 'gzip'
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
         };
 
         Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
@@ -570,7 +663,8 @@ describe('parse()', function () {
 
             var request = Wreck.toReadableStream(compressed);
             request.headers = {
-                'content-encoding': 'gzip'
+                'content-encoding': 'gzip',
+                'content-type': 'application/json'
             };
 
             Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
@@ -589,7 +683,8 @@ describe('parse()', function () {
 
             var request = Wreck.toReadableStream(compressed);
             request.headers = {
-                'content-encoding': 'gzip'
+                'content-encoding': 'gzip',
+                'content-type': 'application/json'
             };
 
             Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
@@ -608,7 +703,8 @@ describe('parse()', function () {
 
             var request = Wreck.toReadableStream(compressed);
             request.headers = {
-                'content-encoding': 'deflate'
+                'content-encoding': 'deflate',
+                'content-type': 'application/json'
             };
 
             Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
@@ -627,7 +723,8 @@ describe('parse()', function () {
 
             var request = Wreck.toReadableStream(compressed);
             request.headers = {
-                'content-encoding': 'deflate'
+                'content-encoding': 'deflate',
+                'content-type': 'application/json'
             };
 
             Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, function (err, parsed) {
@@ -1247,7 +1344,9 @@ describe('parse()', function () {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
         var request = Wreck.toReadableStream(payload);
-        request.headers = {};
+        request.headers = {
+            'content-type': 'application/json'
+        };
 
         var domain = Domain.create();
         domain.once('error', function (err) {
