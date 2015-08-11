@@ -454,6 +454,21 @@ describe('parse()', function () {
         });
     });
 
+    it('custom default content-type', function (done) {
+
+        var payload = '{"x":"1","y":"2","z":"3"}';
+        var request = Wreck.toReadableStream(payload);
+        request.headers = {};
+
+        Subtext.parse(request, null, { parse: true, output: 'data', defaultContentType: 'application/json' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/json');
+            expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+            done();
+        });
+    });
+
     it('returns a parsed text payload', function (done) {
 
         var payload = '{"x":"1","y":"2","z":"3"}';
