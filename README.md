@@ -1,13 +1,12 @@
 #subtext
 
-HTTP payload parser.
-
-subtext parses the request body and exposes it in a callback.
-
 [![Build Status](https://secure.travis-ci.org/hapijs/subtext.png)](http://travis-ci.org/hapijs/subtext)
 
 Lead Maintainer - [John Brett](https://github.com/johnbrett)
 
+HTTP payload parser.
+
+subtext parses the request body and exposes it in a callback.
 
 ## Example
 
