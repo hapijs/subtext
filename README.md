@@ -29,17 +29,6 @@ console.log('Server running at http://127.0.0.1:1337/');
 
 ```
 
-## Documentation
+## API
 
-`Subtext.parse(request, tap, options, callback)`
-
-`options` are the following:
-- `parse`: (required) boolean
-- `output`: (required) 'data', 'stream', 'file'
-- `maxBytes`: int
-- `override`: string
-- `defaultContentType`: string
-- `allow`: string, only allow a certain media type
-- `timeout`: integer, limit time spent buffering request
-- `qs`: object, to pass into the qs module
-- `uploads`: string, directory for file uploads
+See the [API Reference](API.md)
