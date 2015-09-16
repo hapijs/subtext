@@ -1097,7 +1097,7 @@ describe('parse()', function () {
         });
     });
 
-    it('parses multiple files as files', function (done) {
+    it('parses multiple files as files 2', function (done) {
 
         var path = Path.join(__dirname, './file/image.jpg');
         var stats = Fs.statSync(path);
