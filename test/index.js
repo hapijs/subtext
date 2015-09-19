@@ -1099,6 +1099,27 @@ describe('parse()', function () {
 
     it('parses multiple files as files', function (done) {
 
+        var path = Path.join(__dirname, './file/image.jpg');
+        var stats = Fs.statSync(path);
+
+        var form = new FormData();
+        form.append('file1', Fs.createReadStream(path));
+        form.append('file2', Fs.createReadStream(path));
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload.file1.bytes).to.equal(stats.size);
+            expect(parsed.payload.file2.bytes).to.equal(stats.size);
+            Fs.unlinkSync(parsed.payload.file1.path);
+            Fs.unlinkSync(parsed.payload.file2.path);
+            done();
+        });
+    });
+
+    it('parses multiple files of different sizes', function (done) {
+
         var path = Path.join(__dirname, './file/smallimage.png');
         var path2 = Path.join(__dirname, './file/image.jpg');
         var stats = Fs.statSync(path);
@@ -1120,8 +1141,52 @@ describe('parse()', function () {
         });
     });
 
+    it('parses multiple files of different sizes', function (done) {
 
-    it('parses multiple files as files 2', function (done) {
+        var path = Path.join(__dirname, './file/image.jpg');
+        var path2 = Path.join(__dirname, './file/smallimage.png');
+        var stats = Fs.statSync(path);
+        var stats2 = Fs.statSync(path2);
+
+        var form = new FormData();
+        form.append('file1', Fs.createReadStream(path));
+        form.append('file2', Fs.createReadStream(path2));
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload.file1.bytes).to.equal(stats.size);
+            expect(parsed.payload.file2.bytes).to.equal(stats2.size);
+            Fs.unlinkSync(parsed.payload.file1.path);
+            Fs.unlinkSync(parsed.payload.file2.path);
+            done();
+        });
+    });
+
+
+    it('parses multiple small files', function (done) {
+
+        var path = Path.join(__dirname, './file/smallimage.png');
+        var stats = Fs.statSync(path);
+
+        var form = new FormData();
+        form.append('file1', Fs.createReadStream(path));
+        form.append('file2', Fs.createReadStream(path));
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'file' }, function (err, parsed) {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload.file1.bytes).to.equal(stats.size);
+            expect(parsed.payload.file2.bytes).to.equal(stats.size);
+            Fs.unlinkSync(parsed.payload.file1.path);
+            done();
+        });
+    });
+
+
+    it('parses multiple larger files', function (done) {
 
         var path = Path.join(__dirname, './file/image.jpg');
         var stats = Fs.statSync(path);
