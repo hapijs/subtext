@@ -8,7 +8,6 @@ var Stream = require('stream');
 var Zlib = require('zlib');
 var Code = require('code');
 var FormData = require('form-data');
-var Hoek = require('hoek');
 var Lab = require('lab');
 var Subtext = require('..');
 var Wreck = require('wreck');
@@ -1256,7 +1255,6 @@ describe('parse()', function () {
         Subtext.parse(form, null, { parse: true, output: 'data' }, function (err, parsed) {
 
             expect(err).to.not.exist();
-            var fileContents = Fs.readFileSync(path);
             expect(parsed.payload.my_file.name).to.equal('subtext');
             done();
         });
@@ -1320,7 +1318,6 @@ describe('parse()', function () {
     it('parses a file correctly on stream mode', function (done) {
 
         var path = Path.join(__dirname, './file/image.jpg');
-        var stats = Fs.statSync(path);
         var fileStream = Fs.createReadStream(path);
         var fileContents = Fs.readFileSync(path);
 
