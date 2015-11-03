@@ -1,7 +1,7 @@
 {
   "name": "subtext",
   "description": "HTTP payload parsing",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "repository": "git://github.com/hapijs/subtext",
   "main": "lib/index.js",
   "keywords": [
@@ -12,20 +12,20 @@
     "multipart"
   ],
   "engines": {
-    "node": ">=0.10.40"
+    "node": ">=4.0.0"
   },
   "dependencies": {
-    "boom": "2.x.x",
-    "content": "1.x.x",
-    "hoek": "2.x.x",
-    "pez": "1.x.x",
-    "qs": "5.x.x",
-    "wreck": "6.x.x"
+    "boom": "3.x.x",
+    "content": "3.x.x",
+    "hoek": "3.x.x",
+    "pez": "2.x.x",
+    "qs": "6.x.x",
+    "wreck": "7.x.x"
   },
   "devDependencies": {
-    "code": "1.x.x",
+    "code": "2.x.x",
     "form-data": "0.1.x",
-    "lab": "6.x.x"
+    "lab": "7.x.x"
   },
   "scripts": {
     "test": "lab -a code -t 100 -L",
