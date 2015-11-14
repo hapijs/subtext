@@ -1477,7 +1477,7 @@ describe('parse()', () => {
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 5 }, (err, parsed) => {
+        Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 1 }, (err, parsed) => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Request Timeout');
@@ -1495,7 +1495,7 @@ describe('parse()', () => {
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file', timeout: 5 }, (err, parsed) => {
+        Subtext.parse(form, null, { parse: true, output: 'file', timeout: 1 }, (err, parsed) => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Request Timeout');
