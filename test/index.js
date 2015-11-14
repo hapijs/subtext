@@ -1467,4 +1467,40 @@ describe('parse()', () => {
             });
         });
     });
+
+    it('will timeout correctly for a multipart payload with output as stream', function (done) {
+
+        var path = Path.join(__dirname, './file/image.jpg');
+        var fileStream = Fs.createReadStream(path);
+
+        var form = new FormData();
+        form.append('my_file', fileStream);
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 5 }, function (err, parsed) {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Request Timeout');
+            expect(err.output.statusCode).to.equal(408);
+            done();
+        });
+    });
+
+    it('will timeout correctly for a multipart payload with output file', function (done) {
+
+        var path = Path.join(__dirname, './file/image.jpg');
+        var fileStream = Fs.createReadStream(path);
+
+        var form = new FormData();
+        form.append('my_file', fileStream);
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'file', timeout: 5 }, function (err, parsed) {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Request Timeout');
+            expect(err.output.statusCode).to.equal(408);
+            done();
+        });
+    });
 });
