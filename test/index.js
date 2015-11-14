@@ -1468,16 +1468,16 @@ describe('parse()', () => {
         });
     });
 
-    it('will timeout correctly for a multipart payload with output as stream', function (done) {
+    it('will timeout correctly for a multipart payload with output as stream', (done) => {
 
-        var path = Path.join(__dirname, './file/image.jpg');
-        var fileStream = Fs.createReadStream(path);
+        const path = Path.join(__dirname, './file/image.jpg');
+        const fileStream = Fs.createReadStream(path);
 
-        var form = new FormData();
+        const form = new FormData();
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 5 }, function (err, parsed) {
+        Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 5 }, (err, parsed) => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Request Timeout');
@@ -1486,16 +1486,16 @@ describe('parse()', () => {
         });
     });
 
-    it('will timeout correctly for a multipart payload with output file', function (done) {
+    it('will timeout correctly for a multipart payload with output file', (done) => {
 
-        var path = Path.join(__dirname, './file/image.jpg');
-        var fileStream = Fs.createReadStream(path);
+        const path = Path.join(__dirname, './file/image.jpg');
+        const fileStream = Fs.createReadStream(path);
 
-        var form = new FormData();
+        const form = new FormData();
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file', timeout: 5 }, function (err, parsed) {
+        Subtext.parse(form, null, { parse: true, output: 'file', timeout: 5 }, (err, parsed) => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Request Timeout');
