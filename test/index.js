@@ -79,6 +79,7 @@ describe('parse()', () => {
             expect(parsed.mime).to.equal('application/json');
             Wreck.read(parsed.payload, null, (err, result) => {
 
+                expect(err).to.not.exist();
                 expect(result.toString()).to.equal(payload);
                 done();
             });
@@ -99,6 +100,7 @@ describe('parse()', () => {
             expect(parsed.mime).to.equal('application/json');
             Wreck.read(parsed.payload, null, (err, result) => {
 
+                expect(err).to.not.exist();
                 expect(result.toString()).to.equal(payload);
                 done();
             });
@@ -316,6 +318,7 @@ describe('parse()', () => {
 
         Zlib.gzip(sourceContents, (err, compressed) => {
 
+            expect(err).to.not.exist();
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'gzip'
@@ -341,6 +344,7 @@ describe('parse()', () => {
 
         Zlib.gzip(sourceContents, (err, compressed) => {
 
+            expect(err).to.not.exist();
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'gzip',
@@ -587,57 +591,6 @@ describe('parse()', () => {
         });
     });
 
-    it('parses form encoded payload (array keys)', (done) => {
-
-        const payload = 'x[y]=1&x[z]=2';
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'application/x-www-form-urlencoded'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload).to.deep.equal({ x: { y: '1', z: '2' } });
-            done();
-        });
-    });
-
-    it('parses form encoded payload (with qs arraylimit set to 0)', (done) => {
-
-        const payload = 'x[0]=1&x[100]=2';
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'application/x-www-form-urlencoded'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data', qs: { arrayLimit: 0 } }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload).to.deep.equal({ x: { 0: '1', 100: '2' } });
-            done();
-        });
-    });
-
-    it('parses form encoded payload (with qs arraylimit set to 30) as flat zero indexed array', (done) => {
-
-        const payload = 'x[0]=0&x[1]=1&x[2]=2&x[3]=3&x[4]=4&x[5]=5&x[6]=6&x[7]=7&x[8]=8&x[9]=9&x[10]=10&x[11]=11&x[12]=12&x[13]=13&x[14]=14&x[15]=15&x[16]=16&x[17]=17&x[18]=18&x[19]=19&x[20]=20&x[21]=21&x[22]=22&x[23]=23&x[24]=24&x[25]=25&x[26]=26&x[27]=27&x[28]=28&x[29]=29&';
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'application/x-www-form-urlencoded'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data', qs: { arrayLimit: 30 } }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload).to.deep.equal({ x: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29'] });
-            done();
-        });
-    });
-
     it('errors on malformed zipped payload', (done) => {
 
         const payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
@@ -677,6 +630,7 @@ describe('parse()', () => {
         const payload = '{"x":"1","y":"2","z":"3"}';
         Zlib.gzip(payload, (err, compressed) => {
 
+            expect(err).to.not.exist();
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'gzip',
@@ -697,6 +651,7 @@ describe('parse()', () => {
         const payload = '{"x":"1","y":"2","z":"3"}';
         Zlib.gzip(payload, (err, compressed) => {
 
+            expect(err).to.not.exist();
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'gzip',
@@ -717,6 +672,7 @@ describe('parse()', () => {
         const payload = '{"x":"1","y":"2","z":"3"}';
         Zlib.deflate(payload, (err, compressed) => {
 
+            expect(err).to.not.exist();
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'deflate',
@@ -737,6 +693,7 @@ describe('parse()', () => {
         const payload = '{"x":"1","y":"2","z":"3"}';
         Zlib.deflate(payload, (err, compressed) => {
 
+            expect(err).to.not.exist();
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'deflate',
@@ -800,55 +757,7 @@ describe('parse()', () => {
         });
     });
 
-    it('parses a multipart payload with qs arraylimit set to zero', (done) => {
-
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x[0]"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x[1]"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x[30]"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
-
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'multipart/form-data; boundary=AaB03x'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data', qs: { arrayLimit: 0 } }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload).to.deep.equal({
-                x: { '0': 'First', '1': 'Second', '30': 'Third' },
-                field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
-                pics: '... contents of file1.txt ...\r'
-            });
-
-            done();
-        });
-    });
-
-    it('parses a multipart payload', (done) => {
+    it('parses a multipart payload (ignores unknown mime type)', (done) => {
 
         const payload =
                 '--AaB03x\r\n' +
@@ -873,7 +782,7 @@ describe('parse()', () => {
                 'Repeated name segment\r\n' +
                 '--AaB03x\r\n' +
                 'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
+                'Content-Type: unknown/X\r\n' +
                 '\r\n' +
                 '... contents of file1.txt ...\r\r\n' +
                 '--AaB03x--\r\n';
@@ -889,7 +798,7 @@ describe('parse()', () => {
             expect(parsed.payload).to.deep.equal({
                 x: ['First', 'Second', 'Third'],
                 field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
-                pics: '... contents of file1.txt ...\r'
+                pics: new Buffer('... contents of file1.txt ...\r')
             });
 
             done();
@@ -1061,10 +970,13 @@ describe('parse()', () => {
 
             Wreck.read(parsed.payload.files[1], null, (err, payload2) => {
 
+                expect(err).to.not.exist();
                 Wreck.read(parsed.payload.files[0], null, (err, payload1) => {
 
+                    expect(err).to.not.exist();
                     Wreck.read(parsed.payload.files[2], null, (err, payload3) => {
 
+                        expect(err).to.not.exist();
                         expect(payload1.toString()).to.equal('one');
                         expect(payload2.toString()).to.equal('two');
                         expect(payload3.toString()).to.equal('three');
@@ -1349,61 +1261,6 @@ describe('parse()', () => {
         });
     });
 
-    it('parses field names with arrays', (done) => {
-
-        const payload = '--AaB03x\r\n' +
-                      'Content-Disposition: form-data; name="a[b]"\r\n' +
-                      '\r\n' +
-                      '3\r\n' +
-                      '--AaB03x\r\n' +
-                      'Content-Disposition: form-data; name="a[c]"\r\n' +
-                      '\r\n' +
-                      '4\r\n' +
-                      '--AaB03x--\r\n';
-
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'multipart/form-data; boundary=AaB03x'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.a.b + parsed.payload.a.c).to.equal('34');
-            done();
-        });
-    });
-
-    it('parses field names with arrays and file', (done) => {
-
-        const payload = '----WebKitFormBoundaryE19zNvXGzXaLvS5C\r\n' +
-                  'Content-Disposition: form-data; name="a[b]"\r\n' +
-                  '\r\n' +
-                  '3\r\n' +
-                  '----WebKitFormBoundaryE19zNvXGzXaLvS5C\r\n' +
-                  'Content-Disposition: form-data; name="a[c]"\r\n' +
-                  '\r\n' +
-                  '4\r\n' +
-                  '----WebKitFormBoundaryE19zNvXGzXaLvS5C\r\n' +
-                  'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n' +
-                  'Content-Type: plain/text\r\n' +
-                  '\r\n' +
-                  'and\r\n' +
-                  '----WebKitFormBoundaryE19zNvXGzXaLvS5C--\r\n';
-
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'multipart/form-data; boundary="--WebKitFormBoundaryE19zNvXGzXaLvS5C"'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.a.b + parsed.payload.file + parsed.payload.a.c).to.equal('3and4');
-            done();
-        });
-    });
-
     it('cleans file when stream is aborted', (done) => {
 
         const path = Path.join(__dirname, 'file');
@@ -1414,6 +1271,7 @@ describe('parse()', () => {
 
             Subtext.parse(req, null, { parse: false, output: 'file', uploads: path }, (err, parsed) => {
 
+                expect(err).to.exist();
                 expect(Fs.readdirSync(path).length).to.equal(count);
                 done();
             });
@@ -1431,7 +1289,7 @@ describe('parse()', () => {
 
             const req = Http.request(options, (res) => { });
 
-            req.on('error', (err) => { });
+            req.on('error', () => { });
 
             const random = new Buffer(100000);
             req.write(random);
@@ -1480,7 +1338,7 @@ describe('parse()', () => {
         Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 1 }, (err, parsed) => {
 
             expect(err).to.exist();
-            expect(err.message).to.equal('Request Timeout');
+            expect(err.message).to.equal('Request Time-out');
             expect(err.output.statusCode).to.equal(408);
             done();
         });
@@ -1498,7 +1356,7 @@ describe('parse()', () => {
         Subtext.parse(form, null, { parse: true, output: 'file', timeout: 1 }, (err, parsed) => {
 
             expect(err).to.exist();
-            expect(err.message).to.equal('Request Timeout');
+            expect(err.message).to.equal('Request Time-out');
             expect(err.output.statusCode).to.equal(408);
             done();
         });
