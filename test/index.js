@@ -1010,6 +1010,37 @@ describe('parse()', () => {
         });
     });
 
+    it('error for a multipart file that exceeds maxBytes', (done) => {
+
+        const path = Path.join(__dirname, './file/image.jpg');
+
+        const form = new FormData();
+        form.append('my_file', Fs.createReadStream(path));
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'file', maxBytes: 12 }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Payload content length greater than maximum allowed: 12');
+            done();
+        });
+    });
+
+    it('does not error for a multipart file that is below maxBytes', (done) => {
+
+        const path = Path.join(__dirname, './file/smallimage.png');
+
+        const form = new FormData();
+        form.append('my_file', Fs.createReadStream(path));
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'file', maxBytes: 1052 }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+            done();
+        });
+    });
+
     it('parses multiple files as files', (done) => {
 
         const path = Path.join(__dirname, './file/image.jpg');
