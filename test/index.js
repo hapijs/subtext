@@ -1010,22 +1010,6 @@ describe('parse()', () => {
         });
     });
 
-    it('error for a multipart file that exceeds maxBytes', (done) => {
-
-        const path = Path.join(__dirname, './file/image.jpg');
-
-        const form = new FormData();
-        form.append('my_file', Fs.createReadStream(path));
-        form.headers = form.getHeaders();
-
-        Subtext.parse(form, null, { parse: true, output: 'file', maxBytes: 12 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Payload content length greater than maximum allowed: 12');
-            done();
-        });
-    });
-
     it('parses multiple files as files', (done) => {
 
         const path = Path.join(__dirname, './file/image.jpg');
@@ -1245,90 +1229,6 @@ describe('parse()', () => {
         });
     });
 
-    it('allows a multipart payload not exceeding specified maxBytes', (done) => {
-
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
-
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'multipart/form-data; boundary=AaB03x'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data', maxBytes: 600 }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            done();
-        });
-    });
-
-    it('errors for a multipart payload exceeding specified maxBytes', (done) => {
-
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
-
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'multipart/form-data; boundary=AaB03x'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data', maxBytes: 500 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            done();
-        });
-    });
-
     it('parses a file correctly on stream mode', (done) => {
 
         const path = Path.join(__dirname, './file/image.jpg');
@@ -1458,6 +1358,48 @@ describe('parse()', () => {
             expect(err).to.exist();
             expect(err.message).to.equal('Request Time-out');
             expect(err.output.statusCode).to.equal(408);
+            done();
+        });
+    });
+
+    it('errors if the payload size exceeds the byte limit', (done) => {
+
+        const payload =
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'First\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'Second\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'Third\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Joe Blow\r\nalmost tricked you!\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Repeated name segment\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+                'Content-Type: text/plain\r\n' +
+                '\r\n' +
+                '... contents of file1.txt ...\r\r\n' +
+                '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'stream', maxBytes: 10 }, (err, parsed) => {
+
+            expect(err).to.exist();
             done();
         });
     });
