@@ -1361,4 +1361,46 @@ describe('parse()', () => {
             done();
         });
     });
+
+    it('errors if the payload size exceeds the byte limit', (done) => {
+
+        const payload =
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'First\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'Second\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="x"\r\n' +
+                '\r\n' +
+                'Third\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Joe Blow\r\nalmost tricked you!\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="field1"\r\n' +
+                '\r\n' +
+                'Repeated name segment\r\n' +
+                '--AaB03x\r\n' +
+                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+                'Content-Type: text/plain\r\n' +
+                '\r\n' +
+                '... contents of file1.txt ...\r\r\n' +
+                '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'stream', maxBytes: 10 }, (err, parsed) => {
+
+            expect(err).to.exist();
+            done();
+        });
+    });
 });
