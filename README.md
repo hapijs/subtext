@@ -11,12 +11,12 @@ subtext parses the request body and exposes it in a callback.
 ## Example
 
 ```javascript
-var Http = require('http');
-var Subtext = require('subtext');
+const Http = require('http');
+const Subtext = require('subtext');
 
-Http.createServer(function (request, response) {
+Http.createServer((request, response) => {
 
-    Subtext.parse(request, null, { parse: true, output: 'data' }, function (err, parsed) {
+    Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
 
         response.writeHead(200, { 'Content-Type': 'text/plain' });
         response.end('Payload contains: ' + parsed.payload.toString());
