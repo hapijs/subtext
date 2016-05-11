@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "code": "2.x.x",
-    "form-data": "0.1.x",
+    "form-data": "0.2.x",
     "lab": "10.x.x"
   },
   "scripts": {
