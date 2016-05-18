@@ -2,9 +2,11 @@
 
 HTTP payload parser.
 
-[![Build Status](https://secure.travis-ci.org/hapijs/subtext.png)](http://travis-ci.org/hapijs/subtext)
+[![Build Status](https://secure.travis-ci.org/hapijs/subtext.svg?branch=master)](http://travis-ci.org/hapijs/subtext)
 
-Lead Maintainer - [John Brett](https://github.com/johnbrett)
+Lead Maintainer: [John Brett](https://github.com/johnbrett)
+
+**subtext** is sponsored by [Sponsorama](http://www.sponsorama.io).
 
 subtext parses the request body and exposes it in a callback.
 
