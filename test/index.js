@@ -60,7 +60,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+            expect(parsed.payload).to.equal(JSON.parse(payload));
             done();
         });
     });
@@ -119,7 +119,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json-patch+json');
-            expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+            expect(parsed.payload).to.equal(JSON.parse(payload));
             done();
         });
     });
@@ -260,7 +260,7 @@ describe('parse()', () => {
         Subtext.parse(request, tap, { parse: true, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+            expect(parsed.payload).to.equal(JSON.parse(payload));
             expect(raw).to.equal(payload);
             done();
         });
@@ -286,7 +286,7 @@ describe('parse()', () => {
         Subtext.parse(request, tap, { parse: false, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.toString()).to.deep.equal(payload);
+            expect(parsed.payload.toString()).to.equal(payload);
             expect(raw).to.equal(payload);
             done();
         });
@@ -330,7 +330,7 @@ describe('parse()', () => {
 
                 const receivedContents = Fs.readFileSync(parsed.payload.path);
                 Fs.unlinkSync(parsed.payload.path);
-                expect(receivedContents).to.deep.equal(sourceContents);
+                expect(receivedContents).to.equal(sourceContents);
                 expect(parsed.payload.bytes).to.equal(stats.size);
                 done();
             });
@@ -357,7 +357,7 @@ describe('parse()', () => {
 
                 const receivedContents = Fs.readFileSync(parsed.payload.path);
                 Fs.unlinkSync(parsed.payload.path);
-                expect(receivedContents).to.deep.equal(compressed);
+                expect(receivedContents).to.equal(compressed);
                 done();
             });
         });
@@ -454,7 +454,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+            expect(parsed.payload).to.equal(JSON.parse(payload));
             done();
         });
     });
@@ -469,7 +469,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+            expect(parsed.payload).to.equal(JSON.parse(payload));
             done();
         });
     });
@@ -486,7 +486,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('text/plain');
-            expect(parsed.payload).to.deep.equal(payload);
+            expect(parsed.payload).to.equal(payload);
             done();
         });
     });
@@ -503,7 +503,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('text/plain');
-            expect(parsed.payload).to.deep.equal(payload);
+            expect(parsed.payload).to.equal(payload);
             done();
         });
     });
@@ -520,7 +520,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('text/plain');
-            expect(parsed.payload).to.deep.equal(payload);
+            expect(parsed.payload).to.equal(payload);
             done();
         });
     });
@@ -586,7 +586,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload).to.deep.equal({});
+            expect(parsed.payload).to.equal({});
             done();
         });
     });
@@ -640,7 +640,7 @@ describe('parse()', () => {
             Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
 
                 expect(err).to.not.exist();
-                expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+                expect(parsed.payload).to.equal(JSON.parse(payload));
                 done();
             });
         });
@@ -682,7 +682,7 @@ describe('parse()', () => {
             Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
 
                 expect(err).to.not.exist();
-                expect(parsed.payload).to.deep.equal(JSON.parse(payload));
+                expect(parsed.payload).to.equal(JSON.parse(payload));
                 done();
             });
         });
@@ -747,7 +747,7 @@ describe('parse()', () => {
         Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload).to.deep.equal({
+            expect(parsed.payload).to.equal({
                 x: ['First', 'Second', 'Third'],
                 field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
                 pics: '... contents of file1.txt ...\r'
@@ -795,7 +795,7 @@ describe('parse()', () => {
         Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload).to.deep.equal({
+            expect(parsed.payload).to.equal({
                 x: ['First', 'Second', 'Third'],
                 field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
                 pics: new Buffer('... contents of file1.txt ...\r')
@@ -823,7 +823,7 @@ describe('parse()', () => {
         Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.pics).to.deep.equal({});
+            expect(parsed.payload.pics).to.equal({});
             done();
         });
     });
@@ -964,9 +964,9 @@ describe('parse()', () => {
         Subtext.parse(request, null, { parse: true, output: 'stream' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.files[0].hapi).to.deep.equal({ filename: 'file1.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file1.txt"', 'content-type': 'text/plain' } });
-            expect(parsed.payload.files[1].hapi).to.deep.equal({ filename: 'file2.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file2.txt"', 'content-type': 'text/plain' } });
-            expect(parsed.payload.files[2].hapi).to.deep.equal({ filename: 'file3.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file3.txt"', 'content-type': 'text/plain' } });
+            expect(parsed.payload.files[0].hapi).to.equal({ filename: 'file1.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file1.txt"', 'content-type': 'text/plain' } });
+            expect(parsed.payload.files[1].hapi).to.equal({ filename: 'file2.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file2.txt"', 'content-type': 'text/plain' } });
+            expect(parsed.payload.files[2].hapi).to.equal({ filename: 'file3.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file3.txt"', 'content-type': 'text/plain' } });
 
             Wreck.read(parsed.payload.files[1], null, (err, payload2) => {
 
@@ -1005,7 +1005,7 @@ describe('parse()', () => {
             const sourceContents = Fs.readFileSync(path);
             const receivedContents = Fs.readFileSync(parsed.payload.my_file.path);
             Fs.unlinkSync(parsed.payload.my_file.path);
-            expect(sourceContents).to.deep.equal(receivedContents);
+            expect(sourceContents).to.equal(receivedContents);
             done();
         });
     });
@@ -1221,8 +1221,8 @@ describe('parse()', () => {
         Subtext.parse(request, tap, { parse: true, output: 'stream' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.x).to.deep.equal(['First', 'Second', 'Third']);
-            expect(parsed.payload.field1).to.deep.equal(['Joe Blow\r\nalmost tricked you!', 'Repeated name segment']);
+            expect(parsed.payload.x).to.equal(['First', 'Second', 'Third']);
+            expect(parsed.payload.field1).to.equal(['Joe Blow\r\nalmost tricked you!', 'Repeated name segment']);
             expect(parsed.payload.pics.hapi.filename).to.equal('file1.txt');
             expect(raw).to.equal(payload);
             done();
@@ -1243,7 +1243,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
 
-            expect(parsed.payload.my_file.hapi).to.deep.equal({
+            expect(parsed.payload.my_file.hapi).to.equal({
                 filename: 'image.jpg',
                 headers: {
                     'content-disposition': 'form-data; name="my_file"; filename="image.jpg"',
