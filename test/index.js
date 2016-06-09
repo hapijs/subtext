@@ -13,6 +13,7 @@ const FormData = require('form-data');
 const Lab = require('lab');
 const Subtext = require('..');
 const Wreck = require('wreck');
+const compress = require('iltorb').compress;
 
 
 // Declare internals
@@ -310,7 +311,7 @@ describe('parse()', () => {
         });
     });
 
-    it('saves a file after content decoding', (done) => {
+    it('saves a file after content decoding (gzip)', (done) => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const sourceContents = Fs.readFileSync(path);
@@ -337,7 +338,34 @@ describe('parse()', () => {
         });
     });
 
-    it('saves a file ignoring content decoding when parse is false', (done) => {
+    it('saves a file after content decoding (br)', (done) => {
+
+        const path = Path.join(__dirname, './file/image.jpg');
+        const sourceContents = Fs.readFileSync(path);
+        const stats = Fs.statSync(path);
+
+        compress(sourceContents, (err, compressed) => {
+
+            expect(err).to.not.exist();
+            const request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'br'
+            };
+
+            Subtext.parse(request, null, { parse: true, output: 'file' }, (err, parsed) => {
+
+                expect(err).to.not.exist();
+
+                const receivedContents = Fs.readFileSync(parsed.payload.path);
+                Fs.unlinkSync(parsed.payload.path);
+                expect(receivedContents).to.equal(sourceContents);
+                expect(parsed.payload.bytes).to.equal(stats.size);
+                done();
+            });
+        });
+    });
+
+    it('saves a file ignoring content decoding when parse is false (gzip)', (done) => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const sourceContents = Fs.readFileSync(path);
@@ -348,6 +376,33 @@ describe('parse()', () => {
             const request = Wreck.toReadableStream(compressed);
             request.headers = {
                 'content-encoding': 'gzip',
+                'content-type': 'application/json'
+            };
+
+            Subtext.parse(request, null, { parse: false, output: 'file' }, (err, parsed) => {
+
+                expect(err).to.not.exist();
+
+                const receivedContents = Fs.readFileSync(parsed.payload.path);
+                Fs.unlinkSync(parsed.payload.path);
+                expect(receivedContents).to.equal(compressed);
+                done();
+            });
+        });
+    });
+
+
+    it('saves a file ignoring content decoding when parse is false (br)', (done) => {
+
+        const path = Path.join(__dirname, './file/image.jpg');
+        const sourceContents = Fs.readFileSync(path);
+
+        compress(sourceContents, (err, compressed) => {
+
+            expect(err).to.not.exist();
+            const request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'br',
                 'content-type': 'application/json'
             };
 
@@ -608,6 +663,23 @@ describe('parse()', () => {
         });
     });
 
+    it('errors on malformed br payload', (done) => {
+
+        const payload = '8d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-encoding': 'br',
+            'content-type': 'application/json'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Invalid compressed payload');
+            done();
+        });
+    });
+
     it('errors on malformed zipped payload (parse gunzip only)', (done) => {
 
         const payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
@@ -618,6 +690,23 @@ describe('parse()', () => {
         };
 
         Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Invalid compressed payload');
+            done();
+        });
+    });
+
+    it('errors on malformed br payload (parse br only)', (done) => {
+
+        const payload = '8d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-encoding': 'br',
+            'content-type': 'application/json'
+        };
+
+        Subtext.parse(request, null, { parse: 'br', output: 'data' }, (err, parsed) => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Invalid compressed payload');
@@ -646,6 +735,27 @@ describe('parse()', () => {
         });
     });
 
+    it('parses a br payload', (done) => {
+
+        const payload = '{"x":"1","y":"2","z":"3"}';
+        compress(new Buffer(payload), (err, compressed) => {
+
+            expect(err).to.not.exist();
+            const request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'br',
+                'content-type': 'application/json'
+            };
+
+            Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+
+                expect(err).to.not.exist();
+                expect(parsed.payload).to.equal(JSON.parse(payload));
+                done();
+            });
+        });
+    });
+
     it('unzips payload without parsing', (done) => {
 
         const payload = '{"x":"1","y":"2","z":"3"}';
@@ -659,6 +769,27 @@ describe('parse()', () => {
             };
 
             Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
+
+                expect(err).to.not.exist();
+                expect(parsed.payload.toString()).to.equal(payload);
+                done();
+            });
+        });
+    });
+
+    it('decompresses br payload without parsing', (done) => {
+
+        const payload = '{"x":"1","y":"2","z":"3"}';
+        compress(new Buffer(payload), (err, compressed) => {
+
+            expect(err).to.not.exist();
+            const request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'br',
+                'content-type': 'application/json'
+            };
+
+            Subtext.parse(request, null, { parse: 'br', output: 'data' }, (err, parsed) => {
 
                 expect(err).to.not.exist();
                 expect(parsed.payload.toString()).to.equal(payload);
