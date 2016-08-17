@@ -18,6 +18,7 @@
     "boom": "3.x.x",
     "content": "3.x.x",
     "hoek": "4.x.x",
+    "iltorb": "^1.0.9",
     "pez": "2.x.x",
     "wreck": "8.x.x"
   },
