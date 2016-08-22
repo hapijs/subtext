@@ -14,3 +14,4 @@ Parses the request body and exposes it in a callback.
 - `timeout`: integer, limit time spent buffering request
 - `qs`: object, to pass into the qs module
 - `uploads`: string, directory for file uploads
+- `decoders`: an object mapping content-encoding names to their corresponding decoder functions
