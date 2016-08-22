@@ -33,3 +33,8 @@ console.log('Server running at http://127.0.0.1:1337/');
 ## API
 
 See the [API Reference](API.md)
+
+
+### Warning for subtext on Node below v4.3.2
+
+A Node bug in versions below Node v4.3.2 meant that the `Buffer.byteLength` function did not work correctly, and as such, using `maxBytes` options with multipart payloads will mistake the file buffer size to be incorrectly as bigger than it is. Your options here are either to upgrade to Node version greater than v4.3.2 or increase maxBytes to allow some error in calculation. [Background info in this issue here](https://github.com/hapijs/subtext/pull/32).
