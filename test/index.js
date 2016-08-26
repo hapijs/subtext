@@ -658,7 +658,7 @@ describe('parse()', () => {
                 'content-type': 'application/json'
             };
 
-            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip: (options) => Zlib.createGunzip() } }, (err, parsed) => {
+            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip: (options) => Zlib.createGunzip(options) } }, (err, parsed) => {
 
                 expect(err).to.not.exist();
                 expect(parsed.payload).to.equal(JSON.parse(payload));
@@ -742,7 +742,7 @@ describe('parse()', () => {
                 'content-type': 'application/json'
             };
 
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', compression: {}, decoders: { gzip: (options) => Zlib.createGunzip() } }, (err, parsed) => {
+            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', compression: {}, decoders: { gzip: (options) => Zlib.createGunzip(options) } }, (err, parsed) => {
 
                 expect(err).to.not.exist();
                 expect(parsed.payload.toString()).to.equal(payload);
