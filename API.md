@@ -15,3 +15,4 @@ Parses the request body and exposes it in a callback.
 - `qs`: object, to pass into the qs module
 - `uploads`: string, directory for file uploads
 - `decoders`: an object mapping content-encoding names to their corresponding decoder functions
+- `compression`: an object mapping content-encoding names to their corresponding options passed to the `decoders` functions

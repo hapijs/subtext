@@ -324,7 +324,7 @@ describe('parse()', () => {
                 'content-encoding': 'gzip'
             };
 
-            Subtext.parse(request, null, { parse: true, output: 'file' }, (err, parsed) => {
+            Subtext.parse(request, null, { parse: true, output: 'file', compression: {} }, (err, parsed) => {
 
                 expect(err).to.not.exist();
 
@@ -658,7 +658,7 @@ describe('parse()', () => {
                 'content-type': 'application/json'
             };
 
-            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip: Zlib.createGunzip } }, (err, parsed) => {
+            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip: (options) => Zlib.createGunzip() } }, (err, parsed) => {
 
                 expect(err).to.not.exist();
                 expect(parsed.payload).to.equal(JSON.parse(payload));
@@ -742,10 +742,64 @@ describe('parse()', () => {
                 'content-type': 'application/json'
             };
 
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', decoders: { gzip: Zlib.createGunzip } }, (err, parsed) => {
+            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', compression: {}, decoders: { gzip: (options) => Zlib.createGunzip() } }, (err, parsed) => {
 
                 expect(err).to.not.exist();
                 expect(parsed.payload.toString()).to.equal(payload);
+                done();
+            });
+        });
+    });
+
+    it('unzips payload without parsing (gzip options)', (done) => {
+
+        const payload = '{"x":"1","y":"2","z":"3"}';
+        Zlib.gzip(payload, (err, compressed) => {
+
+            expect(err).to.not.exist();
+            const request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'gzip',
+                'content-type': 'application/json'
+            };
+
+            const gzip = (options) => {
+
+                expect(options).to.equal({ level: 5 });
+                return Zlib.createGunzip();
+            };
+
+            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', decoders: { gzip }, compression: { gzip: { level: 5 } } }, (err, parsed) => {
+
+                expect(err).to.not.exist();
+                expect(parsed.payload.toString()).to.equal(payload);
+                done();
+            });
+        });
+    });
+
+    it('unzips payload (gzip options)', (done) => {
+
+        const payload = '{"x":"1","y":"2","z":"3"}';
+        Zlib.gzip(payload, (err, compressed) => {
+
+            expect(err).to.not.exist();
+            const request = Wreck.toReadableStream(compressed);
+            request.headers = {
+                'content-encoding': 'gzip',
+                'content-type': 'application/json'
+            };
+
+            const gzip = (options) => {
+
+                expect(options).to.equal({ level: 5 });
+                return Zlib.createGunzip();
+            };
+
+            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip }, compression: { gzip: { level: 5 } } }, (err, parsed) => {
+
+                expect(err).to.not.exist();
+                expect(parsed.payload).to.equal({ x: '1', y: '2', z: '3' });
                 done();
             });
         });
