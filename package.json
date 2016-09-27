@@ -15,15 +15,15 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
-    "boom": "3.x.x",
+    "boom": "4.x.x",
     "content": "3.x.x",
     "hoek": "4.x.x",
     "pez": "2.x.x",
-    "wreck": "8.x.x"
+    "wreck": "10.x.x"
   },
   "devDependencies": {
-    "code": "3.x.x",
-    "form-data": "0.2.x",
+    "code": "4.x.x",
+    "form-data": "2.1.x",
     "lab": "11.x.x"
   },
   "scripts": {
