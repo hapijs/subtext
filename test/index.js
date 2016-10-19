@@ -966,6 +966,28 @@ describe('parse()', () => {
         });
     });
 
+    it('errors on disabled multipart', (done) => {
+
+        const payload =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', multipart: false }, (err, parsed) => {
+
+            expect(err).to.exist();
+            done();
+        });
+    });
+
     it('errors on an invalid multipart header (missing boundary)', (done) => {
 
         const payload =
@@ -1048,6 +1070,37 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.payload.pics.toString()).to.equal('... contents of file1.txt ...\r');
+            done();
+        });
+    });
+
+    it('parses file with annotation', (done) => {
+
+        const payload =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: image/jpeg\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary="AaB03x"'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', multipart: { output: 'annotated' } }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+            expect(parsed.payload.pics).to.equal({
+                payload: new Buffer('... contents of file1.txt ...\r'),
+                headers: {
+                    'content-disposition': 'form-data; name="pics"; filename="file1.txt"',
+                    'content-type': 'image/jpeg'
+                },
+                filename: 'file1.txt'
+            });
+
             done();
         });
     });
@@ -1135,6 +1188,29 @@ describe('parse()', () => {
         form.headers = form.getHeaders();
 
         Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+
+            expect(parsed.payload.my_file.bytes).to.equal(stats.size);
+
+            const sourceContents = Fs.readFileSync(path);
+            const receivedContents = Fs.readFileSync(parsed.payload.my_file.path);
+            Fs.unlinkSync(parsed.payload.my_file.path);
+            expect(sourceContents).to.equal(receivedContents);
+            done();
+        });
+    });
+
+    it('parses a multipart file as file (multipart override)', (done) => {
+
+        const path = Path.join(__dirname, './file/image.jpg');
+        const stats = Fs.statSync(path);
+
+        const form = new FormData();
+        form.append('my_file', Fs.createReadStream(path));
+        form.headers = form.getHeaders();
+
+        Subtext.parse(form, null, { parse: true, output: 'data', multipart: { output: 'file' } }, (err, parsed) => {
 
             expect(err).to.not.exist();
 
