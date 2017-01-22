@@ -240,6 +240,39 @@ describe('parse()', () => {
         });
     });
 
+    it('errors on invalid JSON payload and returns failedJsonString with setting failedPayloadJsonString:true', (done) => {
+
+        const payload = '{"x":"1","y":"2","z":"3"';
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', keepFailedJsonString: true }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(parsed.failedJsonString).to.exist();
+            expect(parsed.failedJsonString).to.equal(payload);
+            done();
+        });
+    });
+
+    it('errors on invalid JSON payload and does not return string with setting failedPayloadJsonString:false', (done) => {
+
+        const payload = '{"x":"1","y":"2","z":"3"';
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', keepFailedJsonString: false }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(parsed.failedJsonString).to.not.exist();
+            done();
+        });
+    });
+
     it('peeks at the unparsed stream of a parsed body', (done) => {
 
         const payload = '{"x":"1","y":"2","z":"3"}';
