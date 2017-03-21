@@ -592,6 +592,50 @@ describe('parse()', () => {
         });
     });
 
+    it('parses when maxKeys is not provided', (done) => {
+
+        let payload = 'x0=a';
+
+        for (let i = 1; i < 10000; ++i) {
+            payload += '&x' + i + '=a';
+        }
+
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(Object.keys(parsed.payload).length).to.equal(1000);
+            done();
+        });
+    });
+
+    it('parses large form encoded payload with maxKeys', (done) => {
+
+        let payload = 'x0=a';
+
+        for (let i = 1; i < 10000; ++i) {
+            payload += '&x' + i + '=a';
+        }
+
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', maxKeys: 15000 }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(Object.keys(parsed.payload).length).to.equal(10000);
+            done();
+        });
+    });
+
     it('errors on malformed zipped payload', (done) => {
 
         const payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
