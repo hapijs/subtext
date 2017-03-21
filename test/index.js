@@ -575,6 +575,28 @@ describe('parse()', () => {
         });
     });
 
+    it('parses form encoded payload (custom parser)', (done) => {
+
+        const payload = 'x=abc';
+        const request = Wreck.toReadableStream(payload);
+        request.headers = {
+            'content-type': 'application/x-www-form-urlencoded'
+        };
+
+        const querystring = (x) => {
+
+            return { x };
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data', querystring }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
+            expect(parsed.payload.x).to.equal(payload);
+            done();
+        });
+    });
+
     it('parses empty form encoded payload', (done) => {
 
         const payload = '';
