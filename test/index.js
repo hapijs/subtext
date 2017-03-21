@@ -236,6 +236,7 @@ describe('parse()', () => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Invalid request payload JSON format');
+            expect(err.raw.toString()).to.equal(payload);
             done();
         });
     });
