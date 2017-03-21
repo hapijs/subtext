@@ -16,3 +16,4 @@ Parses the request body and exposes it in a callback.
 - `uploads`: string, directory for file uploads
 - `decoders`: an object mapping content-encoding names to their corresponding decoder functions
 - `compression`: an object mapping content-encoding names to their corresponding options passed to the `decoders` functions
+- `keepFailedJsonString`: boolean, true to keep failed parsed json string assuming it can be encoded to utf8. false by default.
