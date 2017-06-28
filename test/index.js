@@ -203,6 +203,7 @@ describe('parse()', () => {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Payload content length greater than maximum allowed: 10');
+            expect(err.output.statusCode).to.equal(413);
             done();
         });
     });
