@@ -1,4 +1,4 @@
-#subtext
+# subtext
 
 HTTP payload parser.
 
@@ -8,7 +8,7 @@ Lead Maintainer: [John Brett](https://github.com/johnbrett)
 
 subtext parses the request body and exposes it in a callback.
 
-## Example
+## Example
 
 ```javascript
 const Http = require('http');
