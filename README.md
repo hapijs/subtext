@@ -6,8 +6,6 @@ HTTP payload parser.
 
 Lead Maintainer: [John Brett](https://github.com/johnbrett)
 
-**subtext** is sponsored by [Sponsorama](http://www.sponsorama.io).
-
 subtext parses the request body and exposes it in a callback.
 
 ## Example
