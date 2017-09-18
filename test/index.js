@@ -2,14 +2,15 @@
 
 // Load modules
 
-const Domain = require('domain');
 const Fs = require('fs');
 const Http = require('http');
 const Path = require('path');
 const Stream = require('stream');
 const Zlib = require('zlib');
+
 const Code = require('code');
 const FormData = require('form-data');
+const Hoek = require('hoek');
 const Lab = require('lab');
 const Subtext = require('..');
 const Wreck = require('wreck');
@@ -30,222 +31,162 @@ const expect = Code.expect;
 
 describe('parse()', () => {
 
-    it('returns a raw body', (done) => {
+    it('returns a raw body', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: false, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            expect(Buffer.isBuffer(parsed.payload)).to.be.true();
-            expect(parsed.payload.toString()).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: false, output: 'data' });
+        expect(mime).to.equal('application/json');
+        expect(Buffer.isBuffer(payload)).to.be.true();
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('returns a parsed body', (done) => {
+    it('returns a parsed body', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.equal(JSON.parse(payload));
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/json');
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('returns a parsed body as stream', (done) => {
+    it('returns a parsed body as stream', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'stream' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            Wreck.read(parsed.payload, null, (err, result) => {
-
-                expect(err).to.not.exist();
-                expect(result.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload: stream, mime } = await Subtext.parse(request, null, { parse: true, output: 'stream' });
+        expect(mime).to.equal('application/json');
+        const payload = await Wreck.read(stream);
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('returns a raw body as stream', (done) => {
+    it('returns a raw body as stream', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: false, output: 'stream' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            Wreck.read(parsed.payload, null, (err, result) => {
-
-                expect(err).to.not.exist();
-                expect(result.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload: stream, mime } = await Subtext.parse(request, null, { parse: false, output: 'stream' });
+        expect(mime).to.equal('application/json');
+        const payload = await Wreck.read(stream);
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('returns a parsed body (json-derived media type)', (done) => {
+    it('returns a parsed body (json-derived media type)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json-patch+json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json-patch+json');
-            expect(parsed.payload).to.equal(JSON.parse(payload));
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/json-patch+json');
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('returns an empty parsed body', (done) => {
+    it('returns an empty parsed body', async () => {
 
-        const payload = '';
-        const request = Wreck.toReadableStream(payload);
+        const body = '';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.equal(null);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/json');
+        expect(payload).to.equal(null);
     });
 
-    it('returns an empty string', (done) => {
+    it('returns an empty string', async () => {
 
-        const payload = '';
-        const request = Wreck.toReadableStream(payload);
+        const body = '';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload).to.equal('');
-            done();
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload).to.equal('');
     });
 
-    it('errors on invalid content type header', (done) => {
+    it('errors on invalid content type header', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'steve'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Invalid content-type header');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid content-type header');
     });
 
-    it('errors on unsupported content type', (done) => {
+    it('errors on unsupported content type', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'james/bond'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Unsupported Media Type');
-            expect(parsed.payload).to.be.null();
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Unsupported Media Type');
     });
 
-    it('errors when content-length header greater than maxBytes', (done) => {
+    it('errors when content-length header greater than maxBytes', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-length': '50',
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Payload content length greater than maximum allowed: 10');
-            expect(err.output.statusCode).to.equal(413);
-            done();
-        });
+        const err = await expect(Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 })).to.reject('Payload content length greater than maximum allowed: 10');
+        expect(err.output.statusCode).to.equal(413);
     });
 
-    it('limits maxBytes when content-length header missing', (done) => {
+    it('limits maxBytes when content-length header missing', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
         request.destroy = function () { };
 
-        Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Payload content length greater than maximum allowed: 10');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 })).to.reject('Payload content length greater than maximum allowed: 10');
     });
 
-    it('errors on invalid JSON payload', (done) => {
+    it('errors on invalid JSON payload', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Invalid request payload JSON format');
-            expect(err.raw.toString()).to.equal(payload);
-            done();
-        });
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid request payload JSON format');
+        expect(err.raw.toString()).to.equal(body);
     });
 
-    it('peeks at the unparsed stream of a parsed body', (done) => {
+    it('peeks at the unparsed stream of a parsed body', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
@@ -259,19 +200,15 @@ describe('parse()', () => {
             callback();
         };
 
-        Subtext.parse(request, tap, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload).to.equal(JSON.parse(payload));
-            expect(raw).to.equal(payload);
-            done();
-        });
+        const { payload } = await Subtext.parse(request, tap, { parse: true, output: 'data' });
+        expect(payload).to.equal(JSON.parse(body));
+        expect(raw).to.equal(body);
     });
 
-    it('peeks at the unparsed stream of an unparsed body', (done) => {
+    it('peeks at the unparsed stream of an unparsed body', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
         };
@@ -285,301 +222,220 @@ describe('parse()', () => {
             callback();
         };
 
-        Subtext.parse(request, tap, { parse: false, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.toString()).to.equal(payload);
-            expect(raw).to.equal(payload);
-            done();
-        });
+        const { payload } = await Subtext.parse(request, tap, { parse: false, output: 'data' });
+        expect(payload.toString()).to.equal(body);
+        expect(raw).to.equal(body);
     });
 
-    it('saves file', (done) => {
+    it('saves file', async () => {
 
         const request = Wreck.toReadableStream('payload');
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: false, output: 'file' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-
-            const receivedContents = Fs.readFileSync(parsed.payload.path);
-            Fs.unlinkSync(parsed.payload.path);
-            expect(receivedContents.toString()).to.equal('payload');
-            done();
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: false, output: 'file' });
+        const receivedContents = Fs.readFileSync(payload.path);
+        Fs.unlinkSync(payload.path);
+        expect(receivedContents.toString()).to.equal('payload');
     });
 
-    it('saves a file after content decoding', (done) => {
+    it('saves a file after content decoding', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const sourceContents = Fs.readFileSync(path);
         const stats = Fs.statSync(path);
 
-        Zlib.gzip(sourceContents, (err, compressed) => {
+        const compressed = await internals.compress('gzip', sourceContents);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip'
-            };
-
-            Subtext.parse(request, null, { parse: true, output: 'file', compression: {} }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-
-                const receivedContents = Fs.readFileSync(parsed.payload.path);
-                Fs.unlinkSync(parsed.payload.path);
-                expect(receivedContents).to.equal(sourceContents);
-                expect(parsed.payload.bytes).to.equal(stats.size);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'file', compression: {} });
+        const receivedContents = Fs.readFileSync(payload.path);
+        Fs.unlinkSync(payload.path);
+        expect(receivedContents).to.equal(sourceContents);
+        expect(payload.bytes).to.equal(stats.size);
     });
 
-    it('saves a file ignoring content decoding when parse is false', (done) => {
+    it('saves a file ignoring content decoding when parse is false', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const sourceContents = Fs.readFileSync(path);
 
-        Zlib.gzip(sourceContents, (err, compressed) => {
+        const compressed = await internals.compress('gzip', sourceContents);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: false, output: 'file' }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-
-                const receivedContents = Fs.readFileSync(parsed.payload.path);
-                Fs.unlinkSync(parsed.payload.path);
-                expect(receivedContents).to.equal(compressed);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: false, output: 'file' });
+        const receivedContents = Fs.readFileSync(payload.path);
+        Fs.unlinkSync(payload.path);
+        expect(receivedContents).to.equal(compressed);
     });
 
-    it('errors on invalid upload directory (parse false)', (done) => {
+    it('errors on invalid upload directory (parse false)', async () => {
 
         const request = Wreck.toReadableStream('payload');
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: false, output: 'file', uploads: '/a/b/c/no/such/folder' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.contain('ENOENT');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: false, output: 'file', uploads: '/a/b/c/no/such/folder' })).to.reject(/ENOENT/);
     });
 
-    it('errors on invalid upload directory (parse true)', (done) => {
+    it('errors on invalid upload directory (parse true)', async () => {
 
         const request = Wreck.toReadableStream('payload');
         request.headers = {
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/a/b/c/no/such/folder' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.contain('ENOENT');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/a/b/c/no/such/folder' })).to.reject(/ENOENT/);
     });
 
-    it('processes application/octet-stream', (done) => {
+    it('processes application/octet-stream', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/octet-stream'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/octet-stream');
-            expect(Buffer.isBuffer(parsed.payload)).to.be.true();
-            expect(parsed.payload.toString()).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/octet-stream');
+        expect(Buffer.isBuffer(payload)).to.be.true();
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('defaults to application/octet-stream', (done) => {
+    it('defaults to application/octet-stream', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {};
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/octet-stream');
-            expect(Buffer.isBuffer(parsed.payload)).to.be.true();
-            expect(parsed.payload.toString()).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/octet-stream');
+        expect(Buffer.isBuffer(payload)).to.be.true();
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('returns null on empty payload and application/octet-stream', (done) => {
+    it('returns null on empty payload and application/octet-stream', async () => {
 
-        const payload = '';
-        const request = Wreck.toReadableStream(payload);
+        const body = '';
+        const request = Wreck.toReadableStream(body);
         request.headers = {};
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/octet-stream');
-            expect(parsed.payload).to.be.null();
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/octet-stream');
+        expect(payload).to.be.null();
     });
 
-    it('overrides content-type', (done) => {
+    it('overrides content-type', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', override: 'application/json' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.equal(JSON.parse(payload));
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data', override: 'application/json' });
+        expect(mime).to.equal('application/json');
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('custom default content-type', (done) => {
+    it('custom default content-type', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {};
 
-        Subtext.parse(request, null, { parse: true, output: 'data', defaultContentType: 'application/json' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/json');
-            expect(parsed.payload).to.equal(JSON.parse(payload));
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data', defaultContentType: 'application/json' });
+        expect(mime).to.equal('application/json');
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('returns a parsed text payload', (done) => {
+    it('returns a parsed text payload', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('text/plain');
-            expect(parsed.payload).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('text/plain');
+        expect(payload).to.equal(body);
     });
 
-    it('parses an allowed content-type', (done) => {
+    it('parses an allowed content-type', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', allow: 'text/plain' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('text/plain');
-            expect(parsed.payload).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data', allow: 'text/plain' });
+        expect(mime).to.equal('text/plain');
+        expect(payload).to.equal(body);
     });
 
-    it('parses an allowed content-type (array)', (done) => {
+    it('parses an allowed content-type (array)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', allow: ['text/plain'] }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('text/plain');
-            expect(parsed.payload).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data', allow: ['text/plain'] });
+        expect(mime).to.equal('text/plain');
+        expect(payload).to.equal(body);
     });
 
-    it('errors on an unallowed content-type', (done) => {
+    it('errors on an unallowed content-type', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', allow: 'application/json' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Unsupported Media Type');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data', allow: 'application/json' })).to.reject('Unsupported Media Type');
     });
 
-    it('errors on an unallowed content-type (array)', (done) => {
+    it('errors on an unallowed content-type (array)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'text/plain'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', allow: ['application/json'] }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Unsupported Media Type');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data', allow: ['application/json'] })).to.reject('Unsupported Media Type');
     });
 
-    it('parses form encoded payload', (done) => {
+    it('parses form encoded payload', async () => {
 
-        const payload = 'x=abc';
-        const request = Wreck.toReadableStream(payload);
+        const body = 'x=abc';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/x-www-form-urlencoded'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload.x).to.equal('abc');
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/x-www-form-urlencoded');
+        expect(payload.x).to.equal('abc');
     });
 
-    it('parses form encoded payload (custom parser)', (done) => {
+    it('parses form encoded payload (custom parser)', async () => {
 
-        const payload = 'x=abc';
-        const request = Wreck.toReadableStream(payload);
+        const body = 'x=abc';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/x-www-form-urlencoded'
         };
@@ -589,410 +445,314 @@ describe('parse()', () => {
             return { x };
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', querystring }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload.x).to.equal(payload);
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data', querystring });
+        expect(mime).to.equal('application/x-www-form-urlencoded');
+        expect(payload.x).to.equal(body);
     });
 
-    it('parses empty form encoded payload', (done) => {
+    it('parses empty form encoded payload', async () => {
 
-        const payload = '';
-        const request = Wreck.toReadableStream(payload);
+        const body = '';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/x-www-form-urlencoded'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.mime).to.equal('application/x-www-form-urlencoded');
-            expect(parsed.payload).to.equal({});
-            done();
-        });
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(mime).to.equal('application/x-www-form-urlencoded');
+        expect(payload).to.equal({});
     });
 
-    it('errors on malformed zipped payload', (done) => {
+    it('errors on malformed zipped payload', async () => {
 
-        const payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
-        const request = Wreck.toReadableStream(payload);
+        const body = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-encoding': 'gzip',
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Invalid compressed payload');
-            done();
-        });
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid compressed payload');
+        expect(err.output.statusCode).to.equal(400);
     });
 
-    it('errors on malformed zipped payload (parse gunzip only)', (done) => {
+    it('errors on malformed zipped payload (parse gunzip only)', async () => {
 
-        const payload = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
-        const request = Wreck.toReadableStream(payload);
+        const body = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-encoding': 'gzip',
             'content-type': 'application/json'
         };
 
-        Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Invalid compressed payload');
-            done();
-        });
+        const err = await expect(Subtext.parse(request, null, { parse: 'gunzip', output: 'data' })).to.reject('Invalid compressed payload');
+        expect(err.output.statusCode).to.equal(400);
     });
 
-    it('parses a gzipped payload', (done) => {
+    it('errors on malformed zipped payloa (with tap and raw)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '7d8d78347h8347d58w347hd58w374d58w37h5d8w37hd4';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
+        let raw = '';
+        const tap = new Stream.Transform();
+        tap._transform = function (chunk, encoding, callback) {
 
-            Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+            raw = raw + chunk.toString();
+            this.push(chunk, encoding);
+            callback();
+        };
 
-                expect(err).to.not.exist();
-                expect(parsed.payload).to.equal(JSON.parse(payload));
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, tap, { parse: 'gunzip', output: 'stream' });
+        const err = await expect(Wreck.read(payload)).to.reject('Invalid compressed payload');
+        expect(err.output.statusCode).to.equal(400);
     });
 
-    it('parses a gzipped payload (external decoders)', (done) => {
+    it('parses a gzipped payload', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip: (options) => Zlib.createGunzip(options) } }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload).to.equal(JSON.parse(payload));
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('unzips payload without parsing', (done) => {
+    it('parses a gzipped payload (external decoders)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip: (options) => Zlib.createGunzip(options) } });
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('unzips payload without parsing (deflate)', (done) => {
+    it('unzips payload without parsing', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.deflate(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'deflate',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data' });
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('leaves payload raw when encoding unknown', (done) => {
+    it('unzips payload without parsing (deflate)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('deflate', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'deflate',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'unknown',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload.toString()).to.equal(compressed.toString());
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data' });
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('unzips payload without parsing (external decoders)', (done) => {
+    it('leaves payload raw when encoding unknown', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'unknown',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', compression: {}, decoders: { gzip: (options) => Zlib.createGunzip(options) } }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data' });
+        expect(payload.toString()).to.equal(compressed.toString());
     });
 
-    it('unzips payload without parsing (gzip options)', (done) => {
+    it('unzips payload without parsing (external decoders)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
-
-            const gzip = (options) => {
-
-                expect(options).to.equal({ level: 5 });
-                return Zlib.createGunzip();
-            };
-
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data', decoders: { gzip }, compression: { gzip: { level: 5 } } }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data', compression: {}, decoders: { gzip: (options) => Zlib.createGunzip(options) } });
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('unzips payload (gzip options)', (done) => {
+    it('unzips payload without parsing (gzip options)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.gzip(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'gzip',
-                'content-type': 'application/json'
-            };
+        const gzip = (options) => {
 
-            const gzip = (options) => {
+            expect(options).to.equal({ level: 5 });
+            return Zlib.createGunzip();
+        };
 
-                expect(options).to.equal({ level: 5 });
-                return Zlib.createGunzip();
-            };
-
-            Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip }, compression: { gzip: { level: 5 } } }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload).to.equal({ x: '1', y: '2', z: '3' });
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data', decoders: { gzip }, compression: { gzip: { level: 5 } } });
+        expect(payload.toString()).to.equal(body);
     });
 
-    it('parses a deflated payload', (done) => {
+    it('unzips payload (gzip options)', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.deflate(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('gzip', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'gzip',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'deflate',
-                'content-type': 'application/json'
-            };
+        const gzip = (options) => {
 
-            Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+            expect(options).to.equal({ level: 5 });
+            return Zlib.createGunzip();
+        };
 
-                expect(err).to.not.exist();
-                expect(parsed.payload).to.equal(JSON.parse(payload));
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data', decoders: { gzip }, compression: { gzip: { level: 5 } } });
+        expect(payload).to.equal({ x: '1', y: '2', z: '3' });
     });
 
-    it('deflates payload without parsing', (done) => {
+    it('parses a deflated payload', async () => {
 
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        Zlib.deflate(payload, (err, compressed) => {
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('deflate', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'deflate',
+            'content-type': 'application/json'
+        };
 
-            expect(err).to.not.exist();
-            const request = Wreck.toReadableStream(compressed);
-            request.headers = {
-                'content-encoding': 'deflate',
-                'content-type': 'application/json'
-            };
-
-            Subtext.parse(request, null, { parse: 'gunzip', output: 'data' }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                expect(parsed.payload.toString()).to.equal(payload);
-                done();
-            });
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload).to.equal(JSON.parse(body));
     });
 
-    it('parses a multipart payload', (done) => {
+    it('deflates payload without parsing', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const compressed = await internals.compress('deflate', body);
+        const request = Wreck.toReadableStream(compressed);
+        request.headers = {
+            'content-encoding': 'deflate',
+            'content-type': 'application/json'
+        };
 
-        const request = Wreck.toReadableStream(payload);
+        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data' });
+        expect(payload.toString()).to.equal(body);
+    });
+
+    it('parses a multipart payload', async () => {
+
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload).to.equal({
-                x: ['First', 'Second', 'Third'],
-                field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
-                pics: '... contents of file1.txt ...\r'
-            });
-
-            done();
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload).to.equal({
+            x: ['First', 'Second', 'Third'],
+            field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
+            pics: '... contents of file1.txt ...\r'
         });
     });
 
-    it('parses a multipart payload (ignores unknown mime type)', (done) => {
+    it('parses a multipart payload (ignores unknown mime type)', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: unknown/X\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: unknown/X\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload).to.equal({
-                x: ['First', 'Second', 'Third'],
-                field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
-                pics: new Buffer('... contents of file1.txt ...\r')
-            });
-
-            done();
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload).to.equal({
+            x: ['First', 'Second', 'Third'],
+            field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
+            pics: new Buffer('... contents of file1.txt ...\r')
         });
     });
 
-    it('parses a multipart payload (empty file)', (done) => {
+    it('parses a multipart payload (empty file)', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '\r\n' +
-                '--AaB03x--\r\n';
-
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'multipart/form-data; boundary=AaB03x'
-        };
-
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.pics).to.equal({});
-            done();
-        });
-    });
-
-    it('errors on disabled multipart', (done) => {
-
-        const payload =
+        const body =
             '--AaB03x\r\n' +
             'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
             'Content-Type: text/plain\r\n' +
@@ -1000,107 +760,108 @@ describe('parse()', () => {
             '\r\n' +
             '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', multipart: false }, (err, parsed) => {
-
-            expect(err).to.exist();
-            done();
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload.pics).to.equal({});
     });
 
-    it('errors on an invalid multipart header (missing boundary)', (done) => {
+    it('errors on disabled multipart', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data', multipart: false })).to.reject();
+    });
+
+    it('errors on an invalid multipart header (missing boundary)', async () => {
+
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Invalid content-type header: multipart missing boundary');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid content-type header: multipart missing boundary');
     });
 
-    it('errors on an invalid multipart payload', (done) => {
+    it('errors on an invalid multipart payload', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'First\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Invalid multipart payload format');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid multipart payload format');
     });
 
-    it('parses file without content-type', (done) => {
+    it('parses multipart file without content-type', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.pics.toString()).to.equal('... contents of file1.txt ...\r');
-            done();
-        });
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+        expect(payload.pics.toString()).to.equal('... contents of file1.txt ...\r');
     });
 
-    it('parses file with annotation', (done) => {
+    it('parses multipart file with annotation', async () => {
 
-        const payload =
+        const body =
             '--AaB03x\r\n' +
             'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
             'Content-Type: image/jpeg\r\n' +
@@ -1108,101 +869,79 @@ describe('parse()', () => {
             '... contents of file1.txt ...\r\r\n' +
             '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'data', multipart: { output: 'annotated' } }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.pics).to.equal({
-                payload: new Buffer('... contents of file1.txt ...\r'),
-                headers: {
-                    'content-disposition': 'form-data; name="pics"; filename="file1.txt"',
-                    'content-type': 'image/jpeg'
-                },
-                filename: 'file1.txt'
-            });
-
-            done();
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data', multipart: { output: 'annotated' } });
+        expect(payload.pics).to.equal({
+            payload: new Buffer('... contents of file1.txt ...\r'),
+            headers: {
+                'content-disposition': 'form-data; name="pics"; filename="file1.txt"',
+                'content-type': 'image/jpeg'
+            },
+            filename: 'file1.txt'
         });
     });
 
-    it('errors on invalid uploads folder while processing multipart payload', (done) => {
+    it('errors on invalid uploads folder while processing multipart payload', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.contain('/no/such/folder/a/b/c');
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/\/no\/such\/folder\/a\/b\/c/);
     });
 
-    it('parses multiple files as streams', (done) => {
+    it('parses multiple files as streams', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="files"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                'one\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="files"; filename="file2.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                'two\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="files"; filename="file3.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                'three\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="files"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            'one\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="files"; filename="file2.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            'two\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="files"; filename="file3.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            'three\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'stream' }, (err, parsed) => {
+        const { payload } = await Subtext.parse(request, null, { parse: true, output: 'stream' });
+        expect(payload.files[0].hapi).to.equal({ filename: 'file1.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file1.txt"', 'content-type': 'text/plain' } });
+        expect(payload.files[1].hapi).to.equal({ filename: 'file2.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file2.txt"', 'content-type': 'text/plain' } });
+        expect(payload.files[2].hapi).to.equal({ filename: 'file3.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file3.txt"', 'content-type': 'text/plain' } });
 
-            expect(err).to.not.exist();
-            expect(parsed.payload.files[0].hapi).to.equal({ filename: 'file1.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file1.txt"', 'content-type': 'text/plain' } });
-            expect(parsed.payload.files[1].hapi).to.equal({ filename: 'file2.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file2.txt"', 'content-type': 'text/plain' } });
-            expect(parsed.payload.files[2].hapi).to.equal({ filename: 'file3.txt', headers: { 'content-disposition': 'form-data; name="files"; filename="file3.txt"', 'content-type': 'text/plain' } });
+        const payload2 = await Wreck.read(payload.files[1]);
+        const payload1 = await Wreck.read(payload.files[0]);
+        const payload3 = await Wreck.read(payload.files[2]);
 
-            Wreck.read(parsed.payload.files[1], null, (err, payload2) => {
-
-                expect(err).to.not.exist();
-                Wreck.read(parsed.payload.files[0], null, (err, payload1) => {
-
-                    expect(err).to.not.exist();
-                    Wreck.read(parsed.payload.files[2], null, (err, payload3) => {
-
-                        expect(err).to.not.exist();
-                        expect(payload1.toString()).to.equal('one');
-                        expect(payload2.toString()).to.equal('two');
-                        expect(payload3.toString()).to.equal('three');
-                        done();
-                    });
-                });
-            });
-        });
+        expect(payload1.toString()).to.equal('one');
+        expect(payload2.toString()).to.equal('two');
+        expect(payload3.toString()).to.equal('three');
     });
 
-    it('parses a multipart file as file', (done) => {
+    it('parses a multipart file as file', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const stats = Fs.statSync(path);
@@ -1211,21 +950,16 @@ describe('parse()', () => {
         form.append('my_file', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.my_file.bytes).to.equal(stats.size);
 
-            expect(err).to.not.exist();
-
-            expect(parsed.payload.my_file.bytes).to.equal(stats.size);
-
-            const sourceContents = Fs.readFileSync(path);
-            const receivedContents = Fs.readFileSync(parsed.payload.my_file.path);
-            Fs.unlinkSync(parsed.payload.my_file.path);
-            expect(sourceContents).to.equal(receivedContents);
-            done();
-        });
+        const sourceContents = Fs.readFileSync(path);
+        const receivedContents = Fs.readFileSync(payload.my_file.path);
+        Fs.unlinkSync(payload.my_file.path);
+        expect(sourceContents).to.equal(receivedContents);
     });
 
-    it('parses a multipart file as file (multipart override)', (done) => {
+    it('parses a multipart file as file (multipart override)', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const stats = Fs.statSync(path);
@@ -1234,21 +968,16 @@ describe('parse()', () => {
         form.append('my_file', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'data', multipart: { output: 'file' } }, (err, parsed) => {
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'data', multipart: { output: 'file' } });
+        expect(payload.my_file.bytes).to.equal(stats.size);
 
-            expect(err).to.not.exist();
-
-            expect(parsed.payload.my_file.bytes).to.equal(stats.size);
-
-            const sourceContents = Fs.readFileSync(path);
-            const receivedContents = Fs.readFileSync(parsed.payload.my_file.path);
-            Fs.unlinkSync(parsed.payload.my_file.path);
-            expect(sourceContents).to.equal(receivedContents);
-            done();
-        });
+        const sourceContents = Fs.readFileSync(path);
+        const receivedContents = Fs.readFileSync(payload.my_file.path);
+        Fs.unlinkSync(payload.my_file.path);
+        expect(sourceContents).to.equal(receivedContents);
     });
 
-    it('parses multiple files as files', (done) => {
+    it('parses multiple files as files', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const stats = Fs.statSync(path);
@@ -1258,18 +987,14 @@ describe('parse()', () => {
         form.append('file2', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.file1.bytes).to.equal(stats.size);
-            expect(parsed.payload.file2.bytes).to.equal(stats.size);
-            Fs.unlinkSync(parsed.payload.file1.path);
-            Fs.unlinkSync(parsed.payload.file2.path);
-            done();
-        });
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.file1.bytes).to.equal(stats.size);
+        expect(payload.file2.bytes).to.equal(stats.size);
+        Fs.unlinkSync(payload.file1.path);
+        Fs.unlinkSync(payload.file2.path);
     });
 
-    it('parses multiple files of different sizes', (done) => {
+    it('parses multiple files of different sizes', async () => {
 
         const path = Path.join(__dirname, './file/smallimage.png');
         const path2 = Path.join(__dirname, './file/image.jpg');
@@ -1281,18 +1006,14 @@ describe('parse()', () => {
         form.append('file2', Fs.createReadStream(path2));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.file1.bytes).to.equal(stats.size);
-            expect(parsed.payload.file2.bytes).to.equal(stats2.size);
-            Fs.unlinkSync(parsed.payload.file1.path);
-            Fs.unlinkSync(parsed.payload.file2.path);
-            done();
-        });
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.file1.bytes).to.equal(stats.size);
+        expect(payload.file2.bytes).to.equal(stats2.size);
+        Fs.unlinkSync(payload.file1.path);
+        Fs.unlinkSync(payload.file2.path);
     });
 
-    it('parses multiple files of different sizes', (done) => {
+    it('parses multiple files of different sizes', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const path2 = Path.join(__dirname, './file/smallimage.png');
@@ -1304,19 +1025,15 @@ describe('parse()', () => {
         form.append('file2', Fs.createReadStream(path2));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.file1.bytes).to.equal(stats.size);
-            expect(parsed.payload.file2.bytes).to.equal(stats2.size);
-            Fs.unlinkSync(parsed.payload.file1.path);
-            Fs.unlinkSync(parsed.payload.file2.path);
-            done();
-        });
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.file1.bytes).to.equal(stats.size);
+        expect(payload.file2.bytes).to.equal(stats2.size);
+        Fs.unlinkSync(payload.file1.path);
+        Fs.unlinkSync(payload.file2.path);
     });
 
 
-    it('parses multiple small files', (done) => {
+    it('parses multiple small files', async () => {
 
         const path = Path.join(__dirname, './file/smallimage.png');
         const stats = Fs.statSync(path);
@@ -1326,18 +1043,14 @@ describe('parse()', () => {
         form.append('file2', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.file1.bytes).to.equal(stats.size);
-            expect(parsed.payload.file2.bytes).to.equal(stats.size);
-            Fs.unlinkSync(parsed.payload.file1.path);
-            done();
-        });
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.file1.bytes).to.equal(stats.size);
+        expect(payload.file2.bytes).to.equal(stats.size);
+        Fs.unlinkSync(payload.file1.path);
     });
 
 
-    it('parses multiple larger files', (done) => {
+    it('parses multiple larger files', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const stats = Fs.statSync(path);
@@ -1347,18 +1060,14 @@ describe('parse()', () => {
         form.append('file2', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.file1.bytes).to.equal(stats.size);
-            expect(parsed.payload.file2.bytes).to.equal(stats.size);
-            Fs.unlinkSync(parsed.payload.file1.path);
-            Fs.unlinkSync(parsed.payload.file2.path);
-            done();
-        });
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.file1.bytes).to.equal(stats.size);
+        expect(payload.file2.bytes).to.equal(stats.size);
+        Fs.unlinkSync(payload.file1.path);
+        Fs.unlinkSync(payload.file2.path);
     });
 
-    it('parses multiple files while waiting for last file to be written', { parallel: false }, (done) => {
+    it('parses multiple files while waiting for last file to be written', { parallel: false }, async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const stats = Fs.statSync(path);
@@ -1384,19 +1093,15 @@ describe('parse()', () => {
         form.append('b', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file' }, (err, parsed) => {
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'file' });
+        expect(payload.a.bytes).to.equal(stats.size);
+        expect(payload.b.bytes).to.equal(stats.size);
 
-            expect(err).to.not.exist();
-            expect(parsed.payload.a.bytes).to.equal(stats.size);
-            expect(parsed.payload.b.bytes).to.equal(stats.size);
-
-            // The first file is never written due to createWriteStream() above
-            Fs.unlinkSync(parsed.payload.b.path);
-            done();
-        });
+        // The first file is never written due to createWriteStream() above
+        Fs.unlinkSync(payload.b.path);
     });
 
-    it('parses a multipart file as data', (done) => {
+    it('parses a multipart file as data', async () => {
 
         const path = Path.join(__dirname, '../package.json');
 
@@ -1404,45 +1109,41 @@ describe('parse()', () => {
         form.append('my_file', Fs.createReadStream(path));
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.my_file.name).to.equal('subtext');
-            done();
-        });
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'data' });
+        expect(payload.my_file.name).to.equal('subtext');
     });
 
-    it('peeks at multipart in stream mode', (done) => {
+    it('peeks at multipart in stream mode', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
@@ -1456,18 +1157,14 @@ describe('parse()', () => {
             callback();
         };
 
-        Subtext.parse(request, tap, { parse: true, output: 'stream' }, (err, parsed) => {
-
-            expect(err).to.not.exist();
-            expect(parsed.payload.x).to.equal(['First', 'Second', 'Third']);
-            expect(parsed.payload.field1).to.equal(['Joe Blow\r\nalmost tricked you!', 'Repeated name segment']);
-            expect(parsed.payload.pics.hapi.filename).to.equal('file1.txt');
-            expect(raw).to.equal(payload);
-            done();
-        });
+        const { payload } = await Subtext.parse(request, tap, { parse: true, output: 'stream' });
+        expect(payload.x).to.equal(['First', 'Second', 'Third']);
+        expect(payload.field1).to.equal(['Joe Blow\r\nalmost tricked you!', 'Repeated name segment']);
+        expect(payload.pics.hapi.filename).to.equal('file1.txt');
+        expect(raw).to.equal(body);
     });
 
-    it('parses a file correctly on stream mode', (done) => {
+    it('parses a multipart file correctly on stream mode', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const fileStream = Fs.createReadStream(path);
@@ -1477,94 +1174,53 @@ describe('parse()', () => {
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'stream' }, (err, parsed) => {
+        const { payload } = await Subtext.parse(form, null, { parse: true, output: 'stream' });
 
-            expect(err).to.not.exist();
-
-            expect(parsed.payload.my_file.hapi).to.equal({
-                filename: 'image.jpg',
-                headers: {
-                    'content-disposition': 'form-data; name="my_file"; filename="image.jpg"',
-                    'content-type': 'image/jpeg'
-                }
-            });
-
-            Wreck.read(parsed.payload.my_file, null, (err, buffer) => {
-
-                expect(err).to.not.exist();
-                expect(fileContents.length).to.equal(buffer.length);
-                expect(fileContents.toString('binary') === buffer.toString('binary')).to.equal(true);
-                done();
-            });
+        expect(payload.my_file.hapi).to.equal({
+            filename: 'image.jpg',
+            headers: {
+                'content-disposition': 'form-data; name="my_file"; filename="image.jpg"',
+                'content-type': 'image/jpeg'
+            }
         });
+
+        const buffer = await Wreck.read(payload.my_file);
+        expect(fileContents.length).to.equal(buffer.length);
+        expect(fileContents.toString('binary') === buffer.toString('binary')).to.equal(true);
     });
 
-    it('cleans file when stream is aborted', (done) => {
+    it('cleans file when stream is aborted', async () => {
 
         const path = Path.join(__dirname, 'file');
         const count = Fs.readdirSync(path).length;
 
         const server = Http.createServer();
-        server.on('request', (req, res) => {
+        await new Promise((resolve) => server.listen(0, resolve));
+        const receive = new Promise((resolve) => server.once('request', (req, res) => resolve(req)));
 
-            Subtext.parse(req, null, { parse: false, output: 'file', uploads: path }, (err, parsed) => {
-
-                expect(err).to.exist();
-                expect(Fs.readdirSync(path).length).to.equal(count);
-                done();
-            });
-        });
-
-        server.listen(0, () => {
-
-            const options = {
-                hostname: 'localhost',
-                port: server.address().port,
-                path: '/',
-                method: 'POST',
-                headers: { 'content-length': 1000000 }
-            };
-
-            const req = Http.request(options, (res) => { });
-
-            req.on('error', () => { });
-
-            const random = new Buffer(100000);
-            req.write(random);
-            req.write(random);
-            setTimeout(() => {
-
-                req.abort();
-            }, 10);
-        });
-    });
-
-    it('avoids catching an error thrown in sync callback', (done) => {
-
-        const payload = '{"x":"1","y":"2","z":"3"}';
-        const request = Wreck.toReadableStream(payload);
-        request.headers = {
-            'content-type': 'application/json'
+        const options = {
+            hostname: 'localhost',
+            port: server.address().port,
+            path: '/',
+            method: 'POST',
+            headers: { 'content-length': 1000000 }
         };
 
-        const domain = Domain.create();
-        domain.once('error', (err) => {
+        const req = Http.request(options, (res) => { });
+        req.on('error', Hoek.ignore);
+        const random = new Buffer(100000);
+        req.write(random);
+        req.write(random);
 
-            expect(err.message).to.equal('callback error');
-            done();
-        });
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        req.abort();
 
-        domain.run(() => {
-
-            Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
-
-                expect(err).to.not.exist();
-                throw new Error('callback error');
-            });
-        });
+        const incoming = await receive;
+        await expect(Subtext.parse(incoming, null, { parse: false, output: 'file', uploads: path })).to.reject();
+        expect(Fs.readdirSync(path).length).to.equal(count);
     });
 
-    it('will timeout correctly for a multipart payload with output as stream', (done) => {
+    it('will timeout correctly for a multipart payload with output as stream', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const fileStream = Fs.createReadStream(path);
@@ -1573,16 +1229,11 @@ describe('parse()', () => {
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 1 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Request Time-out');
-            expect(err.output.statusCode).to.equal(408);
-            done();
-        });
+        const err = await expect(Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 1 })).to.reject('Request Time-out');
+        expect(err.output.statusCode).to.equal(408);
     });
 
-    it('will timeout correctly for a multipart payload with output file', (done) => {
+    it('will timeout correctly for a multipart payload with output file', async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const fileStream = Fs.createReadStream(path);
@@ -1591,54 +1242,51 @@ describe('parse()', () => {
         form.append('my_file', fileStream);
         form.headers = form.getHeaders();
 
-        Subtext.parse(form, null, { parse: true, output: 'file', timeout: 1 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            expect(err.message).to.equal('Request Time-out');
-            expect(err.output.statusCode).to.equal(408);
-            done();
-        });
+        const err = await expect(Subtext.parse(form, null, { parse: true, output: 'file', timeout: 1 })).to.reject('Request Time-out');
+        expect(err.output.statusCode).to.equal(408);
     });
 
-    it('errors if the payload size exceeds the byte limit', (done) => {
+    it('errors if the payload size exceeds the byte limit', async () => {
 
-        const payload =
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'First\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Second\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="x"\r\n' +
-                '\r\n' +
-                'Third\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Joe Blow\r\nalmost tricked you!\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="field1"\r\n' +
-                '\r\n' +
-                'Repeated name segment\r\n' +
-                '--AaB03x\r\n' +
-                'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
-                'Content-Type: text/plain\r\n' +
-                '\r\n' +
-                '... contents of file1.txt ...\r\r\n' +
-                '--AaB03x--\r\n';
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(payload);
+        const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'multipart/form-data; boundary=AaB03x'
         };
 
-        Subtext.parse(request, null, { parse: true, output: 'stream', maxBytes: 10 }, (err, parsed) => {
-
-            expect(err).to.exist();
-            done();
-        });
+        await expect(Subtext.parse(request, null, { parse: true, output: 'stream', maxBytes: 10 })).to.reject();
     });
 });
+
+
+internals.compress = function (encoder, value) {
+
+    return new Promise((resolve) => Zlib[encoder](value, (ignoreErr, compressed) => resolve(compressed)));
+};
