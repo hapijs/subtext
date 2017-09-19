@@ -1,8 +1,8 @@
 # API Reference
 
-### `Subtext.parse(request, tap, options, callback)`
+### `Subtext.parse(request, tap, options)`
 
-Parses the request body and exposes it in a callback.
+Parses the request body and returns it in a promise.
 
 `options` are the following:
 - `parse`: (required) boolean
@@ -16,3 +16,7 @@ Parses the request body and exposes it in a callback.
 - `uploads`: string, directory for file uploads
 - `decoders`: an object mapping content-encoding names to their corresponding decoder functions
 - `compression`: an object mapping content-encoding names to their corresponding options passed to the `decoders` functions
+
+returns the following:
+- `payload`: the parsed payload, or null if no payload
+- `mime`: the content type of the request
