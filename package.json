@@ -1,7 +1,7 @@
 {
   "name": "subtext",
   "description": "HTTP payload parsing",
-  "version": "6.0.1",
+  "version": "6.0.3",
   "repository": "git://github.com/hapijs/subtext",
   "main": "lib/index.js",
   "keywords": [
@@ -15,10 +15,10 @@
     "node": ">=8.0.0"
   },
   "dependencies": {
-    "boom": "5.x.x",
+    "boom": "6.x.x",
     "content": "4.x.x",
-    "hoek": "4.x.x",
-    "pez": "2.x.x",
+    "hoek": "5.x.x",
+    "pez": "3.x.x",
     "wreck": "13.x.x"
   },
   "devDependencies": {
