@@ -744,7 +744,7 @@ describe('parse()', () => {
         expect(payload).to.equal({
             x: ['First', 'Second', 'Third'],
             field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
-            pics: new Buffer('... contents of file1.txt ...\r')
+            pics: Buffer.from('... contents of file1.txt ...\r')
         });
     });
 
@@ -874,7 +874,7 @@ describe('parse()', () => {
 
         const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data', multipart: { output: 'annotated' } });
         expect(payload.pics).to.equal({
-            payload: new Buffer('... contents of file1.txt ...\r'),
+            payload: Buffer.from('... contents of file1.txt ...\r'),
             headers: {
                 'content-disposition': 'form-data; name="pics"; filename="file1.txt"',
                 'content-type': 'image/jpeg'
@@ -1075,14 +1075,8 @@ describe('parse()', () => {
 
             Fs.createWriteStream = orig;
             const stream = new Stream.Writable();
-            stream._write = (chunk, encoding, callback) => {
-
-                callback();
-            };
-            stream.once('finish', () => {
-
-                stream.emit('close');
-            });
+            stream._write = (chunk, encoding, callback) => callback();
+            stream.once('finish', () => stream.emit('close'));
             return stream;
         };
 
@@ -1206,11 +1200,11 @@ describe('parse()', () => {
 
         const req = Http.request(options, (res) => { });
         req.on('error', Hoek.ignore);
-        const random = new Buffer(100000);
+        const random = Buffer.alloc(100000);
         req.write(random);
         req.write(random);
 
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await Hoek.wait(10);
         req.abort();
 
         const incoming = await receive;
