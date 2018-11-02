@@ -233,6 +233,7 @@ describe('parse()', () => {
         };
 
         const { payload } = await Subtext.parse(request, null, { parse: false, output: 'file' });
+        expect(payload).to.only.contain(['path', 'bytes']);
         const receivedContents = Fs.readFileSync(payload.path);
         Fs.unlinkSync(payload.path);
         expect(receivedContents.toString()).to.equal('payload');
