@@ -11,9 +11,6 @@
     "stream",
     "multipart"
   ],
-  "engines": {
-    "node": ">=8.12.0"
-  },
   "dependencies": {
     "boom": "7.x.x",
     "content": "4.x.x",
