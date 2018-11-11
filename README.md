@@ -4,7 +4,7 @@ HTTP payload parser.
 
 [![Build Status](https://secure.travis-ci.org/hapijs/subtext.svg?branch=master)](http://travis-ci.org/hapijs/subtext)
 
-Lead Maintainer: [John Brett](https://github.com/johnbrett)
+Lead Maintainer: [Eran Hammer](https://github.com/hueniverse)
 
 `subtext` parses the request body and returns it in a promise.
 
