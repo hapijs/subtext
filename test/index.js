@@ -169,6 +169,18 @@ describe('parse()', () => {
         await expect(Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 10 })).to.reject('Payload content length greater than maximum allowed: 10');
     });
 
+    it('validates maxBytes when content is within limit', async () => {
+
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-length': '50',
+            'content-type': 'application/json'
+        };
+
+        await expect(Subtext.parse(request, null, { parse: false, output: 'data', maxBytes: 100 })).to.not.reject();
+    });
+
     it('errors on invalid JSON payload', async () => {
 
         const body = '{"x":"1","y":"2","z":"3"';
