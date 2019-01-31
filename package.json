@@ -13,6 +13,7 @@
   ],
   "dependencies": {
     "boom": "7.x.x",
+    "bourne": "1.x.x",
     "content": "4.x.x",
     "hoek": "6.x.x",
     "pez": "4.x.x",

@@ -1,7 +1,5 @@
 'use strict';
 
-// Load modules
-
 const Fs = require('fs');
 const Http = require('http');
 const Path = require('path');
@@ -16,12 +14,8 @@ const Subtext = require('..');
 const Wreck = require('wreck');
 
 
-// Declare internals
-
 const internals = {};
 
-
-// Test shortcuts
 
 const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
@@ -122,6 +116,19 @@ describe('parse()', () => {
         expect(payload).to.equal('');
     });
 
+    it('removes __proto__ from input', async () => {
+
+        const body = '{"x":1,"y":2,"z":3,"__proto__":{"a":1}}';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data', protoAction: 'remove' });
+        expect(mime).to.equal('application/json');
+        expect(payload).to.equal({ x: 1, y: 2, z: 3 });
+    });
+
     it('errors on invalid content type header', async () => {
 
         const body = '{"x":"1","y":"2","z":"3"}';
@@ -184,6 +191,18 @@ describe('parse()', () => {
     it('errors on invalid JSON payload', async () => {
 
         const body = '{"x":"1","y":"2","z":"3"';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid request payload JSON format');
+        expect(err.raw.toString()).to.equal(body);
+    });
+
+    it('errors on invalid JSON payload (__proto__)', async () => {
+
+        const body = '{"x":1,"y":2,"z":3,"__proto__":{"a":1}}';
         const request = Wreck.toReadableStream(body);
         request.headers = {
             'content-type': 'application/json'
