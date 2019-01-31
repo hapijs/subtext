@@ -960,7 +960,7 @@ describe('parse()', () => {
             expect(parsed.payload).to.equal({
                 x: ['First', 'Second', 'Third'],
                 field1: ['Joe Blow\r\nalmost tricked you!', 'Repeated name segment'],
-                pics: new Buffer('... contents of file1.txt ...\r')
+                pics: Buffer.from('... contents of file1.txt ...\r')
             });
 
             done();
@@ -1117,7 +1117,7 @@ describe('parse()', () => {
 
             expect(err).to.not.exist();
             expect(parsed.payload.pics).to.equal({
-                payload: new Buffer('... contents of file1.txt ...\r'),
+                payload: Buffer.from('... contents of file1.txt ...\r'),
                 headers: {
                     'content-disposition': 'form-data; name="pics"; filename="file1.txt"',
                     'content-type': 'image/jpeg'
@@ -1529,7 +1529,7 @@ describe('parse()', () => {
 
             req.on('error', () => { });
 
-            const random = new Buffer(100000);
+            const random = Buffer.alloc(100000);
             req.write(random);
             req.write(random);
             setTimeout(() => {

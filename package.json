@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "boom": "5.x.x",
+    "bourne": "1.x.x",
     "content": "3.x.x",
     "hoek": "4.x.x",
     "pez": "2.x.x",
@@ -27,7 +28,7 @@
     "lab": "13.x.x"
   },
   "scripts": {
-    "test": "lab -a code -t 100 -L",
+    "test": "lab -a code -t 100 -L -I BigUint64Array,BigInt64Array,SharedArrayBuffer,Atomics,BigInt,URL,URLSearchParams",
     "test-cov-html": "lab -a code -r html -o coverage.html"
   },
   "license": "BSD-3-Clause"
