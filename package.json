@@ -1,7 +1,7 @@
 {
   "name": "subtext",
   "description": "HTTP payload parsing",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "repository": "git://github.com/hapijs/subtext",
   "main": "lib/index.js",
   "keywords": [
