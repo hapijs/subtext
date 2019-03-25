@@ -1,5 +1,5 @@
 {
-  "name": "subtext",
+  "name": "@commercial/subtext",
   "description": "HTTP payload parsing",
   "version": "5.0.1",
   "repository": "git://github.com/hapijs/subtext",
@@ -11,25 +11,22 @@
     "stream",
     "multipart"
   ],
-  "engines": {
-    "node": ">=4.0.0"
-  },
   "dependencies": {
-    "boom": "5.x.x",
-    "bourne": "1.x.x",
-    "content": "3.x.x",
-    "hoek": "4.x.x",
-    "pez": "2.x.x",
-    "wreck": "12.x.x"
+    "@commercial/boom": "5.x.x",
+    "@commercial/bourne": "1.x.x",
+    "@commercial/content": "3.x.x",
+    "@commercial/hoek": "4.x.x",
+    "@commercial/pez": "2.x.x",
+    "@commercial/wreck": "12.x.x"
   },
   "devDependencies": {
     "code": "4.x.x",
     "form-data": "2.1.x",
-    "lab": "13.x.x"
+    "lab": "14.x.x"
   },
   "scripts": {
-    "test": "lab -a code -t 100 -L -I BigUint64Array,BigInt64Array,SharedArrayBuffer,Atomics,BigInt,URL,URLSearchParams",
-    "test-cov-html": "lab -a code -r html -o coverage.html"
+    "test": "lab -a code -t 100 -L -l",
+    "test-cov-html": "lab -a code -r html -o coverage.html -l"
   },
-  "license": "BSD-3-Clause"
+  "license": "SEE LICENSE IN LICENSE.md"
 }

@@ -1,26 +1,21 @@
 'use strict';
 
-// Load modules
-
 const Domain = require('domain');
 const Fs = require('fs');
 const Http = require('http');
 const Path = require('path');
 const Stream = require('stream');
 const Zlib = require('zlib');
+
 const Code = require('code');
 const FormData = require('form-data');
 const Lab = require('lab');
 const Subtext = require('..');
-const Wreck = require('wreck');
+const Wreck = require('@commercial/wreck');
 
-
-// Declare internals
 
 const internals = {};
 
-
-// Test shortcuts
 
 const lab = exports.lab = Lab.script();
 const describe = lab.describe;
@@ -1407,7 +1402,7 @@ describe('parse()', () => {
         Subtext.parse(form, null, { parse: true, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.my_file.name).to.equal('subtext');
+            expect(parsed.payload.my_file.name).to.equal('@commercial/subtext');
             done();
         });
     });
