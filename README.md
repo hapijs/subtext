@@ -12,7 +12,7 @@ Lead Maintainer: [Eran Hammer](https://github.com/hueniverse)
 
 ```javascript
 const Http = require('http');
-const Subtext = require('subtext');
+const Subtext = require('@hapi/subtext');
 
 Http.createServer(async (request, response) => {
 

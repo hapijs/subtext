@@ -6,12 +6,12 @@ const Path = require('path');
 const Stream = require('stream');
 const Zlib = require('zlib');
 
-const Code = require('code');
+const Code = require('@hapi/code');
 const FormData = require('form-data');
-const Hoek = require('hoek');
-const Lab = require('lab');
+const Hoek = require('@hapi/hoek');
+const Lab = require('@hapi/lab');
 const Subtext = require('..');
-const Wreck = require('wreck');
+const Wreck = require('@hapi/wreck');
 
 
 const internals = {};
@@ -1134,7 +1134,7 @@ describe('parse()', () => {
         form.headers = form.getHeaders();
 
         const { payload } = await Subtext.parse(form, null, { parse: true, output: 'data' });
-        expect(payload.my_file.name).to.equal('subtext');
+        expect(payload.my_file.name).to.equal('@hapi/subtext');
     });
 
     it('peeks at multipart in stream mode', async () => {
