@@ -952,7 +952,7 @@ describe('parse()', () => {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
 
-        await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/\/no\/such\/folder\/a\/b\/c/);
+        await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/no.such.folder/);
     });
 
     it('parses multiple files as streams', async () => {
