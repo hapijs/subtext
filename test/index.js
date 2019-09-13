@@ -164,6 +164,29 @@ describe('parse()', () => {
         expect(err.output.statusCode).to.equal(413);
     });
 
+    it('errors when content-length header greater than maxBytes (file)', async () => {
+
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        const err = await expect(Subtext.parse(request, null, { parse: false, output: 'file', maxBytes: 10 })).to.reject('Payload content length greater than maximum allowed: 10');
+        expect(err.output.statusCode).to.equal(413);
+    });
+
+    it('allows file within the maxBytes limit', async () => {
+
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        await expect(Subtext.parse(request, null, { parse: false, output: 'file', maxBytes: 100 })).to.not.reject();
+    });
+
     it('limits maxBytes when content-length header missing', async () => {
 
         const body = '{"x":"1","y":"2","z":"3"}';
