@@ -203,6 +203,38 @@ describe('parse()', () => {
         });
     });
 
+    it('errors when content-length header greater than maxBytes (file)', (done) => {
+
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        Subtext.parse(request, null, { parse: false, output: 'file', maxBytes: 10 }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Payload content length greater than maximum allowed: 10');
+            expect(err.output.statusCode).to.equal(413);
+            done();
+        });
+    });
+
+    it('allows file within the maxBytes limit', (done) => {
+
+        const body = '{"x":"1","y":"2","z":"3"}';
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'application/json'
+        };
+
+        Subtext.parse(request, null, { parse: false, output: 'file', maxBytes: 100 }, (err, parsed) => {
+
+            expect(err).to.not.exist();
+            done();
+        });
+    });
+
     it('limits maxBytes when content-length header missing', (done) => {
 
         const payload = '{"x":"1","y":"2","z":"3"}';
