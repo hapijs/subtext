@@ -1,4 +1,3 @@
-# API Reference
 
 ### `Subtext.parse(request, tap, options)`
 
