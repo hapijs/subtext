@@ -1,32 +1,16 @@
-<a href="http://hapijs.com"><img src="https://raw.githubusercontent.com/hapijs/assets/master/images/family.png" width="180px" align="right" /></a>
+<a href="https://hapi.dev"><img src="https://raw.githubusercontent.com/hapijs/assets/master/images/family.png" width="180px" align="right" /></a>
 
 # @hapi/subtext
 
-HTTP payload parser.
+#### HTTP payload parser.
 
-[![Build Status](https://secure.travis-ci.org/hapijs/subtext.svg?branch=master)](http://travis-ci.org/hapijs/subtext)
+**subtext** is part of the **hapi** ecosystem and was designed to work seamlessly with the [hapi web framework](https://hapi.dev) and its other components (but works great on its own or with other frameworks). If you are using a different web framework and find this module useful, check out [hapi](https://hapi.dev) – they work even better together.
 
-`subtext` parses the request body and returns it in a promise.
+### Visit the [hapi.dev](https://hapi.dev) Developer Portal for tutorials, documentation, and support
 
-## Example
+## Useful resources
 
-```javascript
-const Http = require('http');
-const Subtext = require('@hapi/subtext');
-
-Http.createServer(async (request, response) => {
-
-  const { payload, mime } = await Subtext.parse(request, null, { parse: true, output: 'data' });
-
-  response.writeHead(200, { 'Content-Type': 'text/plain' });
-  response.end(`Payload contains: ${JSON.stringify(payload)}`);
-
-}).listen(1337, '127.0.0.1');
-
-console.log('Server running at http://127.0.0.1:1337/');
-
-```
-
-## API
-
-See the [API Reference](API.md)
+- [Documentation and API](https://hapi.dev/family/subtext/)
+- [Versions status](https://hapi.dev/resources/status/#subtext)
+- [Project policies](https://hapi.dev/policies/)
+- [Free and commercial support options](https://hapi.dev/support/)
