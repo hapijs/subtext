@@ -11,6 +11,6 @@
 ## Useful resources
 
 - [Documentation and API](https://hapi.dev/family/subtext/)
-- [Versions status](https://hapi.dev/resources/status/#subtext)
+- [Versions status](https://hapi.dev/resources/status/#subtext) (builds, dependencies, node versions, licenses, eol)
 - [Project policies](https://hapi.dev/policies/)
 - [Free and commercial support options](https://hapi.dev/support/)
