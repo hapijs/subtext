@@ -1236,7 +1236,7 @@ describe('parse()', () => {
         expect(fileContents.toString('binary') === buffer.toString('binary')).to.equal(true);
     });
 
-    it('cleans file when stream is aborted', async () => {
+    it('cleans file when stream is aborted', { retry: true }, async () => {
 
         const path = Path.join(__dirname, 'file');
         const count = Fs.readdirSync(path).length;
