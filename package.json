@@ -19,7 +19,7 @@
     "@hapi/bourne": "2.x.x",
     "@hapi/content": "5.x.x",
     "@hapi/file": "2.x.x",
-    "@hapi/hoek": "8.x.x",
+    "@hapi/hoek": "9.x.x",
     "@hapi/pez": "5.x.x",
     "@hapi/wreck": "17.x.x"
   },
