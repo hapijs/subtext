@@ -14,7 +14,7 @@
   "dependencies": {
     "@commercial/boom": "5.x.x",
     "@commercial/bourne": "1.x.x",
-    "@commercial/content": "3.x.x",
+    "@commercial/content": "^3.1.1",
     "@commercial/hoek": "4.x.x",
     "@commercial/pez": "2.x.x",
     "@commercial/wreck": "12.x.x"

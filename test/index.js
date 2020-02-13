@@ -1668,4 +1668,70 @@ describe('parse()', () => {
             done();
         });
     });
+
+    it('handles __proto__ in multipart param', (done) => {
+
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"; __proto__="y"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Invalid multipart payload format');
+            done();
+        });
+    });
+
+    it('handles __proto__ in multipart name', (done) => {
+
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="__proto__"; filename="test"\r\n' +
+            'Content-Type: application/json\r\n' +
+            '\r\n' +
+            '{"a":1}\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        Subtext.parse(request, null, { parse: true, output: 'data' }, (err, parsed) => {
+
+            expect(err).to.exist();
+            expect(err.message).to.equal('Invalid multipart payload format');
+            done();
+        });
+    });
 });
