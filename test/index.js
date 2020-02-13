@@ -952,7 +952,7 @@ describe('parse()', () => {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
 
-        await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/\/no\/such\/folder\/a\/b\/c/);
+        await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/no.such.folder/);
     });
 
     it('parses multiple files as streams', async () => {
@@ -1329,6 +1329,62 @@ describe('parse()', () => {
         };
 
         await expect(Subtext.parse(request, null, { parse: true, output: 'stream', maxBytes: 10 })).to.reject();
+    });
+
+    it('handles __proto__ in multipart param', async () => {
+
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"; __proto__="y"\r\n' +
+            '\r\n' +
+            'First\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Second\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="x"\r\n' +
+            '\r\n' +
+            'Third\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Joe Blow\r\nalmost tricked you!\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="field1"\r\n' +
+            '\r\n' +
+            'Repeated name segment\r\n' +
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="pics"; filename="file1.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            '... contents of file1.txt ...\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid multipart payload format');
+    });
+
+    it('handles __proto__ in multipart name', async () => {
+
+        const body =
+            '--AaB03x\r\n' +
+            'content-disposition: form-data; name="__proto__"; filename="test"\r\n' +
+            'Content-Type: application/json\r\n' +
+            '\r\n' +
+            '{"a":1}\r\r\n' +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary=AaB03x'
+        };
+
+        await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid multipart payload format');
     });
 });
 

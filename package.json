@@ -14,10 +14,10 @@
   "dependencies": {
     "@hapi/boom": "7.x.x",
     "@hapi/bourne": "1.x.x",
-    "@hapi/content": "4.x.x",
+    "@hapi/content": "^4.1.1",
     "@hapi/file": "1.x.x",
     "@hapi/hoek": "8.x.x",
-    "@hapi/pez": "4.x.x",
+    "@hapi/pez": "^4.1.2",
     "@hapi/wreck": "15.x.x"
   },
   "devDependencies": {
