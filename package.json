@@ -1,8 +1,11 @@
 {
-  "name": "@hapi/subtext",
+  "name": "@commercial/subtext",
   "description": "HTTP payload parsing",
   "version": "6.1.3",
   "repository": "git://github.com/hapijs/subtext",
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "main": "lib/index.js",
   "keywords": [
     "http",
@@ -12,13 +15,13 @@
     "multipart"
   ],
   "dependencies": {
-    "@hapi/boom": "7.x.x",
-    "@hapi/bourne": "1.x.x",
-    "@hapi/content": "^4.1.1",
-    "@hapi/file": "1.x.x",
-    "@hapi/hoek": "8.x.x",
-    "@hapi/pez": "^4.1.2",
-    "@hapi/wreck": "15.x.x"
+    "@commercial/boom": "^7.4.11",
+    "@commercial/bourne": "^1.3.2",
+    "@commercial/content": "^4.1.1",
+    "@commercial/file": "^1.0.0",
+    "@commercial/hoek": "^8.5.1",
+    "@commercial/pez": "^4.1.2",
+    "@commercial/wreck": "^15.1.0"
   },
   "devDependencies": {
     "@hapi/code": "6.x.x",
@@ -29,5 +32,5 @@
     "test": "lab -a @hapi/code -t 100 -L",
     "test-cov-html": "lab -a @hapi/code -r html -o coverage.html"
   },
-  "license": "BSD-3-Clause"
+  "license": "SEE LICENSE IN LICENSE.md"
 }
