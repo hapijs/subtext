@@ -23,7 +23,7 @@
     "@commercial/content": "^5.0.2",
     "@commercial/file": "2.x.x",
     "@commercial/hoek": "9.x.x",
-    "@commercial/pez": "^5.0.1",
+    "@commercial/pez": "^5.0.3",
     "@commercial/wreck": "17.x.x"
   },
   "devDependencies": {
