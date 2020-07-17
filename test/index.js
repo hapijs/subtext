@@ -8,10 +8,10 @@ const Zlib = require('zlib');
 
 const Code = require('@hapi/code');
 const FormData = require('form-data');
-const Hoek = require('@hapi/hoek');
+const Hoek = require('@commercial/hoek');
 const Lab = require('@hapi/lab');
 const Subtext = require('..');
-const Wreck = require('@hapi/wreck');
+const Wreck = require('@commercial/wreck');
 
 
 const internals = {};
@@ -1157,7 +1157,7 @@ describe('parse()', () => {
         form.headers = form.getHeaders();
 
         const { payload } = await Subtext.parse(form, null, { parse: true, output: 'data' });
-        expect(payload.my_file.name).to.equal('@hapi/subtext');
+        expect(payload.my_file.name).to.equal('@commercial/subtext');
     });
 
     it('peeks at multipart in stream mode', async () => {
