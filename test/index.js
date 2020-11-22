@@ -1259,7 +1259,7 @@ describe('parse()', () => {
         req.write(random);
         req.write(random);
 
-        await Hoek.wait(10);
+        await Hoek.wait(500);
         req.abort();
 
         const incoming = await receive;
