@@ -23,7 +23,7 @@
     "@hapi/boom": "^10.0.0",
     "@hapi/bourne": "^3.0.0",
     "@hapi/content": "^6.0.0",
-    "@hapi/file": "^2.0.0",
+    "@hapi/file": "^3.0.0",
     "@hapi/hoek": "^10.0.0",
     "@hapi/pez": "^6.0.0",
     "@hapi/wreck": "^18.0.0"
