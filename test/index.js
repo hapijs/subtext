@@ -1263,7 +1263,7 @@ describe('parse()', () => {
         req.abort();
 
         const incoming = await receive;
-        await expect(Subtext.parse(incoming, null, { parse: false, output: 'file', uploads: path })).to.reject();
+        await expect(Subtext.parse(incoming, null, { parse: false, output: 'file', uploads: path })).to.reject(/Client connection aborted/);
         expect(Fs.readdirSync(path).length).to.equal(count);
     });
 
