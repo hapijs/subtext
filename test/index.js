@@ -1,6 +1,7 @@
 'use strict';
 
 const Fs = require('fs');
+const Fsp = require('fs/promises');
 const Http = require('http');
 const Path = require('path');
 const Stream = require('stream');
@@ -953,6 +954,55 @@ describe('parse()', () => {
         };
 
         await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/no.such.folder/);
+    });
+
+    it('cleans-up written files on error', async (flags) => {
+
+        const body =
+            '--AaB03x\r\n' +
+            `content-disposition: form-data; name="file1"; filename="file1.txt"\r\n` +
+            '\r\n' +
+            `... contents of file1.txt ...\r\r\n` +
+            '--AaB03x\r\n' +
+            `content-disposition: form-data; name="file2"; filename="file2.txt"\r\n` +
+            '\r\n' +
+            `... contents of file2.txt ...\r\r\n` +
+            '--AaB03x\r\n' +
+            `content-disposition: form-data; name="file3"; filename="file3.txt"\r\n` +
+            '\r\n' +
+            `... contents of file3.txt ...\r\r\n` +
+            '--AaB03x--\r\n';
+
+        const request = Wreck.toReadableStream(body);
+        request.headers = {
+            'content-type': 'multipart/form-data; boundary="AaB03x"'
+        };
+
+        const orig = Fs.createWriteStream;
+        flags.onCleanup = () => Object.assign(Fs, { createWriteStream: orig });
+
+        const files = [];
+        Fs.createWriteStream = (file, ...args) => {
+
+            files.push(file);
+            const stream = orig(file, ...args);
+
+            if (files.length === 2) {
+                // Fail one of the files, for coverage
+                process.nextTick(() => stream.emit('error', new Error('Oops!')));
+            }
+
+            return stream;
+        };
+
+        await expect(Subtext.parse(request, null, { parse: true, output: 'file', maxBytes: body.length - 1 })).to.reject('Invalid multipart payload format');
+
+        expect(files.length).to.equal(3);
+
+        await Hoek.wait(10); // Allow time for cleanup to occur
+        for (const file of files) {
+            await expect(Fsp.readFile(file)).to.reject(/ENOENT/);
+        }
     });
 
     it('parses multiple files as streams', async () => {
