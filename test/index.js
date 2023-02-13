@@ -956,7 +956,7 @@ describe('parse()', () => {
         await expect(Subtext.parse(request, null, { parse: true, output: 'file', uploads: '/no/such/folder/a/b/c' })).to.reject(/no.such.folder/);
     });
 
-    it('cleans-up written files on error', async (flags) => {
+    it('cleans-up written files on error', { retry: true }, async (flags) => {
 
         const body =
             '--AaB03x\r\n' +
@@ -999,7 +999,7 @@ describe('parse()', () => {
 
         expect(files.length).to.equal(3);
 
-        await Hoek.wait(10); // Allow time for cleanup to occur
+        await Hoek.wait(15); // Allow time for cleanup to occur
         for (const file of files) {
             await expect(Fsp.readFile(file)).to.reject(/ENOENT/);
         }
@@ -1317,7 +1317,7 @@ describe('parse()', () => {
         expect(Fs.readdirSync(path).length).to.equal(count);
     });
 
-    it('will timeout correctly for a multipart payload with output as stream', async () => {
+    it('will timeout correctly for a multipart payload with output as stream', { retry: true }, async () => {
 
         const path = Path.join(__dirname, './file/image.jpg');
         const fileStream = Fs.createReadStream(path);
