@@ -1,7 +1,7 @@
 {
   "name": "@hapi/subtext",
   "description": "HTTP payload parsing",
-  "version": "7.0.4",
+  "version": "7.1.0",
   "repository": "git://github.com/hapijs/subtext",
   "main": "lib/index.js",
   "files": [
