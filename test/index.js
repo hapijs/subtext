@@ -1,7 +1,6 @@
 'use strict';
 
 const Fs = require('fs');
-const Fsp = require('fs/promises');
 const Http = require('http');
 const Path = require('path');
 const Stream = require('stream');
@@ -1001,7 +1000,7 @@ describe('parse()', () => {
 
         await Hoek.wait(15); // Allow time for cleanup to occur
         for (const file of files) {
-            await expect(Fsp.readFile(file)).to.reject(/ENOENT/);
+            await expect(Fs.promises.readFile(file)).to.reject(/ENOENT/);
         }
     });
 
