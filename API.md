@@ -32,6 +32,7 @@ Parses the request body and returns it in a promise.
 - `parse`: (required) boolean
 - `output`: (required) 'data', 'stream', 'file'
 - `maxBytes`: int
+- `maxParts`: int
 - `override`: string
 - `defaultContentType`: string
 - `allow`: string, only allow a certain media type
