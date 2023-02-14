@@ -25,7 +25,7 @@
     "@hapi/content": "^6.0.0",
     "@hapi/file": "^3.0.0",
     "@hapi/hoek": "^11.0.2",
-    "@hapi/pez": "^6.0.1",
+    "@hapi/pez": "^6.1.0",
     "@hapi/wreck": "^18.0.1"
   },
   "devDependencies": {
