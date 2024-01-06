@@ -1,7 +1,7 @@
 {
   "name": "subtext",
   "description": "HTTP payload parsing",
-  "version": "5.1.2",
+  "version": "5.1.3",
   "repository": "git://github.com/hapijs/subtext",
   "engines": {
     "node": ">=6.0.0"
