@@ -11,7 +11,7 @@ const Code = require('code');
 const FormData = require('form-data');
 const Lab = require('lab');
 const Subtext = require('..');
-const Wreck = require('@commercial/wreck');
+const Wreck = require('wreck');
 
 
 const internals = {};
@@ -1434,7 +1434,7 @@ describe('parse()', () => {
         Subtext.parse(form, null, { parse: true, output: 'data' }, (err, parsed) => {
 
             expect(err).to.not.exist();
-            expect(parsed.payload.my_file.name).to.equal('@commercial/subtext');
+            expect(parsed.payload.my_file.name).to.equal('subtext');
             done();
         });
     });

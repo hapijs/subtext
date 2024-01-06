@@ -1,5 +1,5 @@
 {
-  "name": "@commercial/subtext",
+  "name": "subtext",
   "description": "HTTP payload parsing",
   "version": "5.1.2",
   "repository": "git://github.com/hapijs/subtext",
@@ -15,12 +15,12 @@
     "multipart"
   ],
   "dependencies": {
-    "@commercial/boom": "5.x.x",
-    "@commercial/bourne": "1.x.x",
-    "@commercial/content": "^3.1.1",
-    "@commercial/hoek": "4.x.x",
-    "@commercial/pez": "2.x.x",
-    "@commercial/wreck": "12.x.x"
+    "boom": "5.x.x",
+    "bourne": "1.x.x",
+    "content": "^3.1.1",
+    "hoek": "4.x.x",
+    "pez": "2.x.x",
+    "wreck": "12.x.x"
   },
   "devDependencies": {
     "code": "4.x.x",
