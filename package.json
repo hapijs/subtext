@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
-    "@hapi/eslint-plugin": "*",
-    "@hapi/lab": "^25.1.2",
+    "@hapi/eslint-plugin": "^7.0.0",
+    "@hapi/lab": "^26.0.0",
     "form-data": "^4.0.0"
   },
   "scripts": {
