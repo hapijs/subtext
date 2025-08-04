@@ -1286,7 +1286,7 @@ describe('parse()', () => {
         expect(fileContents.toString('binary') === buffer.toString('binary')).to.equal(true);
     });
 
-    it('cleans file when stream is aborted', { retry: true }, async () => {
+    it('cleans file when stream is aborted', async () => {
 
         const path = Path.join(__dirname, 'file');
         const count = Fs.readdirSync(path).length;
@@ -1304,13 +1304,13 @@ describe('parse()', () => {
         };
 
         const req = Http.request(options, (res) => { });
-        req.on('error', Hoek.ignore);
+        req.on('error', Hoek.ignore);       // For some reason the stream errors _after_ being destroyed...
         const random = Buffer.alloc(100000);
         req.write(random);
         req.write(random);
 
         await Hoek.wait(500);
-        req.abort();
+        req.destroy();
 
         const incoming = await receive;
         await expect(Subtext.parse(incoming, null, { parse: false, output: 'file', uploads: path })).to.reject(/Client connection aborted/);
