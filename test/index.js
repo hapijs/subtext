@@ -989,7 +989,7 @@ describe('parse()', () => {
 
             if (files.length === 2) {
                 // Fail one of the files, for coverage
-                process.nextTick(() => stream.emit('error', new Error('Oops!')));
+                process.nextTick(() => stream.destroy(new Error('Oops!')));
             }
 
             return stream;
