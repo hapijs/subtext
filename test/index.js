@@ -1304,7 +1304,6 @@ describe('parse()', () => {
         };
 
         const req = Http.request(options, (res) => { });
-        req.on('error', Hoek.ignore);       // For some reason the stream errors _after_ being destroyed...
         const random = Buffer.alloc(100000);
         req.write(random);
         req.write(random);
@@ -1312,8 +1311,18 @@ describe('parse()', () => {
         await Hoek.wait(500);
         req.destroy();
 
+        let error;
+        req.once('error', (err) => (error = err));
+
         const incoming = await receive;
         await expect(Subtext.parse(incoming, null, { parse: false, output: 'file', uploads: path })).to.reject(/Client connection aborted/);
+
+        if (error) {
+            // For some reason the stream can error _after_ being destroyed...
+
+            expect(error).to.contain({ code: 'ECONNRESET' }).and.be.an.error();
+        }
+
         expect(Fs.readdirSync(path).length).to.equal(count);
     });
 
