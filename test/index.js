@@ -634,6 +634,9 @@ describe('parse()', () => {
 
         const err = await expect(Subtext.parse(request, null, { parse: 'gunzip', output: 'data' })).to.reject('Unsupported Media Type');
         expect(err.output.statusCode).to.equal(415);
+        expect(err.output.headers).to.include({
+            'accept-encoding': 'gzip, deflate, identity'
+        });
     });
 
     it('unzips payload without parsing (external decoders)', async () => {
