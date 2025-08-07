@@ -622,7 +622,7 @@ describe('parse()', () => {
         expect(payload.toString()).to.equal(body);
     });
 
-    it('leaves payload raw when encoding unknown', async () => {
+    it('errors when encoding unknown', async () => {
 
         const body = '{"x":"1","y":"2","z":"3"}';
         const compressed = await internals.compress('gzip', body);
@@ -632,8 +632,11 @@ describe('parse()', () => {
             'content-type': 'application/json'
         };
 
-        const { payload } = await Subtext.parse(request, null, { parse: 'gunzip', output: 'data' });
-        expect(payload.toString()).to.equal(compressed.toString());
+        const err = await expect(Subtext.parse(request, null, { parse: 'gunzip', output: 'data' })).to.reject('Unsupported Media Type');
+        expect(err.output.statusCode).to.equal(415);
+        expect(err.output.headers).to.include({
+            'accept-encoding': 'gzip, deflate, identity'
+        });
     });
 
     it('unzips payload without parsing (external decoders)', async () => {
