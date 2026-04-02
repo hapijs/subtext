@@ -22,17 +22,17 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hapi/bourne": "^3.0.0",
-    "@hapi/content": "^6.0.0",
+    "@hapi/content": "^6.0.1",
     "@hapi/file": "^3.0.0",
-    "@hapi/hoek": "^11.0.2",
-    "@hapi/pez": "^6.1.0",
-    "@hapi/wreck": "^18.0.1"
+    "@hapi/hoek": "^11.0.7",
+    "@hapi/pez": "^6.1.1",
+    "@hapi/wreck": "^18.1.0"
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
     "@hapi/eslint-plugin": "^6.0.0",
-    "@hapi/lab": "^25.1.2",
-    "form-data": "^4.0.0"
+    "@hapi/lab": "^25.3.2",
+    "form-data": "^4.0.5"
   },
   "scripts": {
     "test": "lab -a @hapi/code -t 100 -L",
