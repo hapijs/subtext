@@ -22,11 +22,11 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hapi/bourne": "^3.0.0",
-    "@hapi/content": "^6.0.1",
+    "@hapi/content": "^6.0.2",
     "@hapi/file": "^3.0.0",
     "@hapi/hoek": "^11.0.7",
     "@hapi/pez": "^6.1.1",
-    "@hapi/wreck": "^18.1.0"
+    "@hapi/wreck": "^18.1.1"
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
