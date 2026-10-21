@@ -1445,6 +1445,36 @@ describe('parse()', () => {
 
         await expect(Subtext.parse(request, null, { parse: true, output: 'data' })).to.reject('Invalid multipart payload format');
     });
+
+    it('handles hasOwnProperty in multipart name', async () => {
+
+        const body =
+            '--X\r\n' +
+            'Content-Disposition: form-data; name="hasOwnProperty"\r\n' +
+            '\r\n' +
+            'v\r\n' +
+            '--X\r\n' +
+            'Content-Disposition: form-data; name="f"; filename="a.txt"\r\n' +
+            'Content-Type: text/plain\r\n' +
+            '\r\n' +
+            'hello\r\n' +
+            '--X--\r\n';
+
+        for (const output of ['data', 'stream', 'annotated', 'file']) {
+            const request = Wreck.toReadableStream(body);
+            request.headers = {
+                'content-type': 'multipart/form-data; boundary=X'
+            };
+
+            const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data', multipart: { output } });
+            expect(payload.hasOwnProperty).to.equal('v');
+            expect(payload.f).to.exist();
+
+            if (output === 'file') {
+                await Fs.promises.unlink(payload.f.path);
+            }
+        }
+    });
 });
 
 
