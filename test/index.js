@@ -9,6 +9,7 @@ const Stream = require('stream');
 const Zlib = require('zlib');
 
 const Code = require('@hapi/code');
+const File = require('@hapi/file');
 const FormData = require('form-data');
 const Hoek = require('@hapi/hoek');
 const Lab = require('@hapi/lab');
@@ -974,7 +975,7 @@ describe('parse()', () => {
             `... contents of file3.txt ...\r\r\n` +
             '--AaB03x--\r\n';
 
-        const request = Wreck.toReadableStream(body);
+        const request = Stream.Readable.from([body.slice(0, -14), body.slice(-14)]);        // All 3 files start before the closing boundary trips the limit
         request.headers = {
             'content-type': 'multipart/form-data; boundary="AaB03x"'
         };
@@ -1000,8 +1001,11 @@ describe('parse()', () => {
 
         expect(files.length).to.equal(3);
 
-        await Hoek.wait(15); // Allow time for cleanup to occur
         for (const file of files) {
+            for (let i = 0; i < 100 && Fs.existsSync(file); ++i) {            // The cleanup runs after the rejection, give slow file systems up to 1s
+                await Hoek.wait(10);
+            }
+
             await expect(Fsp.readFile(file)).to.reject(/ENOENT/);
         }
     });
@@ -1346,6 +1350,165 @@ describe('parse()', () => {
 
         const err = await expect(Subtext.parse(request, null, { parse: true, output: 'file', timeout: 1, uploads })).to.reject('Request Time-out');
         expect(err.output.statusCode).to.equal(408);
+    });
+
+    it('cleans-up written files when a multipart payload times out', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+        const request = internals.multipartRequest();
+        const parse = Subtext.parse(request, null, { parse: true, output: 'data', timeout: 50, multipart: { output: 'file' }, uploads });
+
+        // The 1st part is still being written when the timeout fires, the 2nd one and the closing boundary arrive after it
+
+        request.write(internals.filePart('doc'));
+        const err = await expect(parse).to.reject('Request Time-out');
+        expect(err.output.statusCode).to.equal(408);
+
+        request.end(internals.filePart('doc2') + '--AaBb--\r\n');
+        await Hoek.wait(100);
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
+    });
+
+    it('cleans-up written files when a multipart payload times out and the request never ends', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+        const request = internals.multipartRequest();
+
+        // The 2nd part's boundary completes the 1st file, the 2nd one is still being written when the body stalls for good
+
+        request.write(internals.filePart('doc') + internals.filePart('doc2'));
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'data', timeout: 50, multipart: { output: 'file' }, uploads })).to.reject('Request Time-out');
+        expect(err.output.statusCode).to.equal(408);
+
+        await Hoek.wait(100);
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
+    });
+
+    it('cleans-up written files when the client disconnects before a multipart payload times out', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+
+        const server = Http.createServer();
+        await new Promise((resolve) => server.listen(0, resolve));
+        const cleanupUploads = flags.onCleanup;
+        flags.onCleanup = () => {
+
+            server.close();
+            return cleanupUploads();
+        };
+
+        const receive = new Promise((resolve) => server.once('request', (req, res) => resolve(req)));
+
+        const req = Http.request({
+            port: server.address().port,
+            method: 'POST',
+            headers: { 'content-type': 'multipart/form-data; boundary=AaBb' }
+        });
+
+        req.on('error', Hoek.ignore);
+
+        // The 2nd part's boundary completes the 1st file, the 2nd one is still being written when the client goes away
+
+        req.write(internals.filePart('doc') + internals.filePart('doc2'));
+
+        const incoming = await receive;
+        const parse = Subtext.parse(incoming, null, { parse: true, output: 'data', timeout: 100, multipart: { output: 'file' }, uploads });
+
+        await Hoek.wait(20);
+        req.destroy();
+
+        await expect(parse).to.reject('Invalid multipart payload format');
+        await Hoek.wait(200);                                   // Past the timeout
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
+    });
+
+    it('does not crash when a multipart payload times out after a file failed to be written', async () => {
+
+        const request = internals.multipartRequest();
+        request.write(internals.filePart('doc'));
+
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'file', timeout: 50, uploads: '/no/such/folder/a/b/c' })).to.reject('Request Time-out');
+        expect(err.output.statusCode).to.equal(408);
+        await Hoek.wait(50);
+    });
+
+    it('cleans-up written files when a multipart payload goes over maxBytes with a file being written', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+        const request = internals.multipartRequest();
+        const parse = Subtext.parse(request, null, { parse: true, output: 'data', maxBytes: 1000, multipart: { output: 'file' }, uploads });
+
+        // The first 2 files are complete, the 3rd one is still being written when the limit is reached
+
+        request.write(internals.filePart('doc') + internals.filePart('doc2'));
+        await Hoek.wait(20);
+        request.write(internals.filePart('doc3', 600));
+
+        await expect(parse).to.reject('Invalid multipart payload format');
+        await Hoek.wait(50);
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
+    });
+
+    it('cleans-up written files when a multipart payload goes over maxParts', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+        const request = internals.multipartRequest();
+        const parse = Subtext.parse(request, null, { parse: true, output: 'data', maxParts: 2, multipart: { output: 'file' }, uploads });
+
+        // The closing boundary trips the limit while the 3rd file is still being written
+
+        request.write(internals.filePart('doc') + internals.filePart('doc2'));
+        await Hoek.wait(20);
+        request.end(internals.filePart('doc3') + '--AaBb--\r\n');
+
+        await expect(parse).to.reject('Invalid multipart payload format');
+        await Hoek.wait(50);
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
+    });
+
+    it('cleans-up written files when a multipart payload times out and the body ends without its closing boundary', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+        const request = internals.multipartRequest();
+        const parse = Subtext.parse(request, null, { parse: true, output: 'data', timeout: 50, multipart: { output: 'file' }, uploads });
+
+        // The parser fails on the truncated body once the timeout already aborted the file being written
+
+        request.write(internals.filePart('doc'));
+        await expect(parse).to.reject('Request Time-out');
+
+        request.end();
+        await Hoek.wait(50);
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
+    });
+
+    it('cleans-up written files when another file fails to be written', async (flags) => {
+
+        const uploads = await internals.uploads(flags);
+        const uniqueFilename = File.uniqueFilename;
+        let count = 0;
+        File.uniqueFilename = (path) => (++count === 2 ? Path.join(uploads, 'missing', 'file') : uniqueFilename(path));
+        const cleanupUploads = flags.onCleanup;
+        flags.onCleanup = () => {
+
+            File.uniqueFilename = uniqueFilename;
+            return cleanupUploads();
+        };
+
+        const request = internals.multipartRequest();
+        request.end(internals.filePart('doc') + internals.filePart('doc2') + '--AaBb--\r\n');
+
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'data', multipart: { output: 'file' }, uploads })).to.reject();
+        expect(err.code).to.equal('ENOENT');
+        await Hoek.wait(50);
+
+        expect(await Fsp.readdir(uploads)).to.equal([]);
     });
 
     it('errors if the payload size exceeds the byte limit', async () => {
