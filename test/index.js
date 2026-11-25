@@ -3,6 +3,7 @@
 const Fs = require('fs');
 const Fsp = require('fs/promises');
 const Http = require('http');
+const Os = require('os');
 const Path = require('path');
 const Stream = require('stream');
 const Zlib = require('zlib');
@@ -1326,29 +1327,24 @@ describe('parse()', () => {
         expect(Fs.readdirSync(path).length).to.equal(count);
     });
 
-    it('will timeout correctly for a multipart payload with output as stream', { retry: true }, async () => {
+    it('will timeout correctly for a multipart payload with output as stream', async () => {
 
-        const path = Path.join(__dirname, './file/image.jpg');
-        const fileStream = Fs.createReadStream(path);
+        // The closing boundary is never sent, so only the timeout can end the parse
 
-        const form = new FormData();
-        form.append('my_file', fileStream);
-        form.headers = form.getHeaders();
+        const request = internals.multipartRequest();
+        request.write(internals.filePart('doc'));
 
-        const err = await expect(Subtext.parse(form, null, { parse: true, output: 'stream', timeout: 1 })).to.reject('Request Time-out');
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'stream', timeout: 1 })).to.reject('Request Time-out');
         expect(err.output.statusCode).to.equal(408);
     });
 
-    it('will timeout correctly for a multipart payload with output file', async () => {
+    it('will timeout correctly for a multipart payload with output file', async (flags) => {
 
-        const path = Path.join(__dirname, './file/image.jpg');
-        const fileStream = Fs.createReadStream(path);
+        const uploads = await internals.uploads(flags);
+        const request = internals.multipartRequest();
+        request.write(internals.filePart('doc'));
 
-        const form = new FormData();
-        form.append('my_file', fileStream);
-        form.headers = form.getHeaders();
-
-        const err = await expect(Subtext.parse(form, null, { parse: true, output: 'file', timeout: 1 })).to.reject('Request Time-out');
+        const err = await expect(Subtext.parse(request, null, { parse: true, output: 'file', timeout: 1, uploads })).to.reject('Request Time-out');
         expect(err.output.statusCode).to.equal(408);
     });
 
@@ -1476,6 +1472,31 @@ describe('parse()', () => {
         }
     });
 });
+
+
+internals.uploads = async function (flags) {
+
+    const uploads = await Fsp.mkdtemp(Path.join(Os.tmpdir(), 'subtext-'));
+    flags.onCleanup = () => Fsp.rm(uploads, { recursive: true });
+    return uploads;
+};
+
+
+internals.multipartRequest = function () {
+
+    const request = new Stream.PassThrough();
+    request.headers = {
+        'content-type': 'multipart/form-data; boundary=AaBb'
+    };
+
+    return request;
+};
+
+
+internals.filePart = function (name, size = 300) {
+
+    return `--AaBb\r\nContent-Disposition: form-data; name="${name}"; filename="${name}.txt"\r\nContent-Type: text/plain\r\n\r\n${'A'.repeat(size)}\r\n`;
+};
 
 
 internals.compress = function (encoder, value) {
